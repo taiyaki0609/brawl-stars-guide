@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10152b">
+<title>BRAWL GUIDE | ブロスタ攻略ブック</title>
+<style>
+:root{--bg:#0b1020;--panel:#151d35;--panel2:#1c2948;--line:#2c3b60;--text:#f4f7ff;--muted:#aab6d4;--cyan:#62e6f2;--pink:#ff78b7;--yellow:#ffd66b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#1c315b 0,transparent 38%),radial-gradient(ellipse at 90% 15%,#42204e 0,transparent 30%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:0 22px}
+header{position:sticky;top:0;z-index:10;background:#0b1020df;backdrop-filter:blur(16px);border-bottom:1px solid #ffffff16}.nav{height:68px;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{font-weight:1000;letter-spacing:1.5px;font-size:20px}.brand b{color:var(--cyan)}.navlinks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.navlinks a:hover{color:var(--cyan)}
+.hero{padding:68px 0 44px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}.eyebrow{color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:3px}.hero h1{font-size:clamp(38px,6vw,70px);line-height:.98;margin:14px 0 18px;letter-spacing:-2px}.hero h1 span{color:var(--yellow)}.hero p{color:var(--muted);line-height:1.8;max-width:620px}.hero-card{background:linear-gradient(145deg,#263d68,#38264e);border:1px solid #ffffff22;border-radius:28px;padding:28px;box-shadow:0 20px 60px #0006;transform:rotate(1deg)}.hero-card .big{font-size:72px}.hero-card strong{display:block;font-size:23px}.hero-card small{color:#d1dcf6}.chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:24px}.chip{border:1px solid var(--line);background:#111a30;border-radius:999px;padding:8px 13px;color:#dce7ff;font-size:12px}
+section{padding:34px 0}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:18px}.section-head h2{font-size:26px;margin:0}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.tag{font-size:11px;color:var(--cyan);font-weight:800;letter-spacing:1px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.feature{background:linear-gradient(150deg,var(--panel),#11182b);border:1px solid var(--line);border-radius:18px;padding:20px;min-height:155px;transition:.2s}.feature:hover{transform:translateY(-3px);border-color:var(--cyan)}.feature .emoji{font-size:28px}.feature h3{margin:10px 0 7px}.feature p{color:var(--muted);font-size:13px;line-height:1.65;margin:0}
+.panel{background:#111a30c9;border:1px solid var(--line);border-radius:20px;padding:20px}.tools{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.tools input,.tools select{background:#0c1428;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--text);font:inherit;min-width:160px}.tools input{flex:1;min-width:220px}.tools select{cursor:pointer}.count{color:var(--muted);font-size:12px;margin:8px 0}.roster{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.brawler{border:1px solid var(--line);background:linear-gradient(145deg,#1a2744,#11192d);border-radius:13px;padding:12px;text-align:left;cursor:pointer;color:var(--text);min-height:72px}.brawler:hover{border-color:var(--yellow);background:#263653}.brawler strong{display:block;font-size:14px}.brawler small{color:var(--muted);font-size:11px}
+.detail{margin-top:14px;display:none;background:#1b2947;border:1px solid #47608e;border-radius:16px;padding:18px}.detail.show{display:block}.detail h3{margin:0 0 8px}.detail p{color:#d0dbf3;line-height:1.7;font-size:13px}
+.maps{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.mapcard{padding:18px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}.mapcard h3{margin:0 0 8px}.mapcard p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}.mapcard b{color:var(--yellow)}
+.notice{border-left:3px solid var(--yellow);padding:12px 15px;background:#2b281b;border-radius:0 12px 12px 0;color:#f4e7bb;font-size:12px;line-height:1.7;margin-top:16px}
+footer{margin-top:30px;padding:28px 0 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.8}
+@media(max-width:800px){.hero{grid-template-columns:1fr;padding-top:42px}.hero-card{transform:none}.grid{grid-template-columns:1fr 1fr}.roster{grid-template-columns:repeat(3,1fr)}.nav{height:auto;min-height:65px;align-items:flex-start;padding:14px 0;flex-direction:column}.navlinks{gap:12px}.maps{grid-template-columns:1fr}}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.roster{grid-template-columns:repeat(2,1fr)}.wrap{padding:0 15px}.hero h1{font-size:43px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><a class="brand" href="#"><b>✦</b> BRAWL GUIDE</a><nav class="navlinks"><a href="#features">攻略メニュー</a><a href="#roster">キャラ一覧</a><a href="#maps">マップ攻略</a><a href="#builds">おすすめ構成</a></nav></div></header>
+<main class="wrap">
+<div class="hero">
+<div><div class="eyebrow">YOUR PERSONAL BRAWL STARS ENCYCLOPEDIA</div><h1>勝つための知識を、<br><span>ここに集結。</span></h1><p>キャラクターの特徴、ガジェット・スターパワー・ギア、スキン、モードやマップごとのおすすめをまとめるブロスタ攻略ブック。</p><div class="chips"><span class="chip">キャラ図鑑</span><span class="chip">ビルド研究</span><span class="chip">マップ別攻略</span><span class="chip">スキン情報</span></div></div>
+<div class="hero-card"><div class="big">🏆⚡</div><strong>PLAY SMART. WIN MORE.</strong><small>自分に合うキャラと戦い方を見つけよう。</small></div>
+</div>
+<section id="features"><div class="section-head"><div><div class="tag">EXPLORE</div><h2>攻略メニュー</h2><p>知りたい情報からチェックしよう。</p></div></div>
+<div class="grid">
+<a class="feature" href="#roster"><div class="emoji">🧬</div><h3>キャラクター図鑑</h3><p>キャラ名・レア度・役割から探す。各キャラの得意な戦い方も紹介。</p></a>
+<a class="feature" href="#builds"><div class="emoji">🛠️</div><h3>おすすめ構成</h3><p>ガジェット、スターパワー、ギアの組み合わせを考える。</p></a>
+<a class="feature" href="#maps"><div class="emoji">🗺️</div><h3>マップ別攻略</h3><p>ブロストライカー、エメラルドハントなど、地形に合うキャラを選ぼう。</p></a>
+<a class="feature" href="#skins"><div class="emoji">🎨</div><h3>スキン図鑑</h3><p>見た目の違いやスキンのテーマ、入手方法をまとめる。</p></a>
+<a class="feature" href="#tips"><div class="emoji">🎯</div><h3>立ち回り講座</h3><p>エイム、壁の使い方、必殺技のタイミングなど基本を確認。</p></a>
+<a class="feature" href="#updates"><div class="emoji">📡</div><h3>アップデート情報</h3><p>環境は変化する。最新情報を確認して攻略を更新しよう。</p></a>
+</div></section>
+<section id="roster"><div class="section-head"><div><div class="tag">BRAWLER DATABASE</div><h2>キャラクター一覧</h2><p>名前で検索したり、役割で絞り込めます。</p></div></div>
+<div class="panel"><div class="tools"><input id="search" type="search" placeholder="キャラ名で検索…"><select id="classFilter"><option value="">すべての役割</option><option>アタッカー</option><option>タンク</option><option>アサシン</option><option>コントローラー</option><option>サポート</option><option>スナイパー</option><option>グレネーディア</option></select><select id="rarityFilter"><option value="">すべてのレア度</option><option>初期キャラ</option><option>レア</option><option>スーパーレア</option><option>ハイパーレア</option><option>ミシック</option><option>レジェンド</option><option>ウルトラ</option></select></div><div class="count" id="count">キャラクター情報を読み込み中…</div><div class="roster" id="rosterList"></div><div class="detail" id="detail"></div><div class="notice">キャラクター情報は外部の公開データから取得します。読み込みに失敗した場合は、時間をおいて再読み込みしてください。分類名は日本語表示に置き換えています。</div></div>
+</section>
+<section id="maps"><div class="section-head"><div><div class="tag">MAP PICK GUIDE</div><h2>このマップなら、このキャラ！</h2><p>マップの地形・障害物・距離感を見て選ぶのが基本。</p></div></div>
+<div class="maps">
+<article class="mapcard"><h3>💎 エメラルドハント</h3><p><b>候補：</b>ジェムキャリアを守れるサポート、中央を制圧できるコントローラー。<br><b>注目：</b>中央の草むら・壁・逃げ道。ジェムを持つ人は無理に前へ出ない。</p></article>
+<article class="mapcard"><h3>⚽ ブロストライカー</h3><p><b>候補：</b>壁を壊せるキャラ、近距離で押し込めるタンク、ゴール前を止めるコントローラー。<br><b>注目：</b>ゴール前の壁とボールを持つタイミング。</p></article>
+<article class="mapcard"><h3>⭐ 賞金稼ぎ</h3><p><b>候補：</b>射程が長く、遠距離で圧力をかけられるスナイパー。<br><b>注目：</b>無理に追わず、リードしたら安全な位置を保つ。</p></article>
+<article class="mapcard"><h3>🔐 ノックアウト</h3><p><b>候補：</b>射程と索敵に優れたキャラ、遮蔽物を利用できるキャラ。<br><b>注目：</b>人数有利を作ること。1人で飛び込まず、味方と同じ相手を狙う。</p></article>
+<article class="mapcard"><h3>🔩 強奪</h3><p><b>候補：</b>金庫にダメージを出せるキャラと、敵の攻撃を止めるキャラ。<br><b>注目：</b>攻め役・守り役をチーム内で分ける。</p></article>
+<article class="mapcard"><h3>🎁 ホットゾーン</h3><p><b>候補：</b>範囲攻撃やエリア制圧が得意なコントローラー、耐久力のあるキャラ。<br><b>注目：</b>ゾーンに居続けるだけでなく、敵を近づけない位置取り。</p></article>
+</div><div class="notice">ここに載せているのはモードごとの基本方針です。実際のおすすめキャラは、マップ名・障害物・最新バランスによって変わります。今後、マップ単位のおすすめを追加します。</div></section>
+<section id="builds"><div class="section-head"><div><div class="tag">LOADOUT LAB</div><h2>おすすめ構成の考え方</h2></div></div><div class="grid">
+<div class="feature"><div class="emoji">⚙️</div><h3>ガジェット</h3><p>ピンチを切り抜ける、敵を妨害する、攻めるなど、マップで必要な役割に合わせる。</p></div>
+<div class="feature"><div class="emoji">🌟</div><h3>スターパワー</h3><p>通常攻撃を強化するか、生存力やサポート力を上げるか。勝ち筋に合わせて選択。</p></div>
+<div class="feature"><div class="emoji">💠</div><h3>ギア</h3><p>草むらが多いなら視界系、耐久勝負なら防御系など、マップとの相性も大切。</p></div>
+</div><div class="notice">特定キャラの最適構成は、キャラの能力と最新の調整内容を確認してから掲載します。未確認の組み合わせを「最強」と断定しません。</div></section>
+<section id="skins"><div class="section-head"><div><div class="tag">COSMETICS</div><h2>スキン図鑑</h2></div></div><div class="panel"><p style="color:var(--muted);line-height:1.8;margin:0">スキンは見た目を変えるカスタマイズ要素。性能が上がるわけではありません。今後、キャラごとにスキン名・レア度・入手方法・登場時期を整理して追加します。</p></div></section>
+<section id="tips"><div class="section-head"><div><div class="tag">BATTLE TIPS</div><h2>勝率を上げる基本テクニック</h2></div></div><div class="grid">
+<div class="feature"><h3>🎯 弾を予測する</h3><p>相手の進行方向を見て少し先を狙う。毎回同じ方向に撃たない。</p></div>
+<div class="feature"><h3>🧱 壁と草むら</h3><p>壁で射線を切り、草むらでは相手に見つかる前に位置を取る。</p></div>
+<div class="feature"><h3>🤝 味方と動く</h3><p>別々の敵を追いかけず、味方と同じ相手に圧力をかける。</p></div>
+</div></section>
+<section id="updates"><div class="section-head"><div><div class="tag">VERSION NOTES</div><h2>データについて</h2></div></div><div class="panel"><p style="color:var(--muted);line-height:1.8;margin:0">この攻略ブックは更新型です。キャラクター数・能力・スキン・マップの登場状況はアップデートで変わります。おすすめは「どのマップで、どんな役割をするか」を基準にし、実際のプレイで調整してください。</p><p style="font-size:12px;color:#8191b5">参考：Supercell公式リリースノート / Brawlify公開データ。非公式ファンサイトであり、Supercellとは関係ありません。</p></div></section>
+</main>
+<footer><div class="wrap">BRAWL GUIDE — 非公式ブロスタ攻略ブック<br>本サイトはファン制作の攻略情報サイトです。Brawl Starsおよび関連素材の権利はSupercellに帰属します。</div></footer>
+<script>
+const fallback = [
+["8-Bit","アタッカー","スーパーレア"],["Amber","コントローラー","レジェンド"],["Angelo","スナイパー","ハイパーレア"],["Ash","タンク","ハイパーレア"],["Barley","グレネーディア","レア"],["Bea","スナイパー","ハイパーレア"],["Belle","スナイパー","ハイパーレア"],["Berry","サポート","ハイパーレア"],["Bibi","タンク","ハイパーレア"],["Bo","コントローラー","ハイパーレア"],["Bonnie","アタッカー","ハイパーレア"],["Brock","スナイパー","レア"],["Bull","タンク","レア"],["Buster","タンク","ミシック"],["Buzz","アサシン","ミシック"],["Byron","サポート","ミシック"],["Carl","アタッカー","スーパーレア"],["Chester","アタッカー","レジェンド"],["Chuck","コントローラー","ミシック"],["Clancy","アタッカー","ミシック"],["Colette","アタッカー","ハイパーレア"],["Colt","アタッカー","レア"],["Cordelius","アサシン","レジェンド"],["Crow","アサシン","レジェンド"],["Darryl","タンク","スーパーレア"],["Dynamike","グレネーディア","スーパーレア"],["Edgar","アサシン","ハイパーレア"],["El Primo","タンク","レア"],["Emz","コントローラー","ハイパーレア"],["Fang","アサシン","ミシック"],["Frank","タンク","ハイパーレア"],["Gale","コントローラー","ハイパーレア"],["Gene","コントローラー","ミシック"],["Grom","グレネーディア","ハイパーレア"],["Griff","コントローラー","ハイパーレア"],["Gus","サポート","スーパーレア"],["Hank","タンク","ハイパーレア"],["Jacky","タンク","スーパーレア"],["Jessie","コントローラー","スーパーレア"],["Kit","サポート","レジェンド"],["Leon","アサシン","レジェンド"],["Lily","アサシン","ミシック"],["Lou","コントローラー","ミシック"],["Max","サポート","ミシック"],["Meg","タンク","レジェンド"],["Melodie","アサシン","ミシック"],["Mico","アサシン","ミシック"],["Moe","アタッカー","ミシック"],["Mortis","アサシン","ミシック"],["Nani","スナイパー","ハイパーレア"],["Nita","アタッカー","レア"],["Otis","コントローラー","ミシック"],["Pam","サポート","ハイパーレア"],["Penny","コントローラー","スーパーレア"],["Piper","スナイパー","ハイパーレア"],["Poco","サポート","レア"],["Rico","アタッカー","スーパーレア"],["Rosa","タンク","レア"],["Ruffs","サポート","ミシック"],["Sam","アサシン","ハイパーレア"],["Sandy","コントローラー","レジェンド"],["Shelly","アタッカー","初期キャラ"],["Spike","アタッカー","レジェンド"],["Sprout","グレネーディア","ミシック"],["Squeak","コントローラー","ミシック"],["Stu","アサシン","ハイパーレア"],["Surge","アタッカー","レジェンド"],["Tara","アタッカー","ミシック"],["Tick","グレネーディア","スーパーレア"],["Willow","コントローラー","ミシック"]
+];
+const classMap={damageDealer:"アタッカー",tank:"タンク",assassin:"アサシン",controller:"コントローラー",support:"サポート",marksman:"スナイパー",artillery:"グレネーディア"};
+const rarityMap={starting:"初期キャラ",rare:"レア",super_rare:"スーパーレア",epic:"ハイパーレア",mythic:"ミシック",legendary:"レジェンド",ultra:"ウルトラ",ultra_legendary:"ウルトラ"};
+let all=fallback.map(([name,cls,rarity])=>({name,cls,rarity,source:"簡易データ"}));
+const list=document.getElementById("rosterList"),search=document.getElementById("search"),cf=document.getElementById("classFilter"),rf=document.getElementById("rarityFilter"),count=document.getElementById("count"),detail=document.getElementById("detail");
+function render(){const q=search.value.trim().toLowerCase();const rows=all.filter(b=>(b.name||"").toLowerCase().includes(q)&&(!cf.value||b.cls===cf.value)&&(!rf.value||b.rarity===rf.value));count.textContent=rows.length+" / "+all.length+" キャラクター";list.innerHTML="";rows.forEach(b=>{const el=document.createElement("button");el.className="brawler";el.innerHTML="<strong></strong><small></small>";el.querySelector("strong").textContent=b.name;el.querySelector("small").textContent=(b.cls||"役割未登録")+" ・ "+(b.rarity||"レア度未登録");el.addEventListener("click",()=>showDetail(b));list.appendChild(el)});}
+function showDetail(b){detail.classList.add("show");detail.innerHTML="";const h=document.createElement("h3");h.textContent=b.name;const p=document.createElement("p");p.textContent="役割："+(b.cls||"情報確認中")+" ／ レア度："+(b.rarity||"情報確認中")+"。このキャラの詳しいガジェット・スターパワー・ギア・スキン情報は、データ確認後に追加予定です。";detail.append(h,p);detail.scrollIntoView({behavior:"smooth",block:"nearest"});}
+[search,cf,rf].forEach(el=>el.addEventListener("input",render));
+async function load(){try{const res=await fetch("https://api.brawlify.com/v1/brawlers");if(!res.ok)throw new Error("API");const data=await res.json();const arr=Array.isArray(data)?data:(data.list||data.brawlers||[]);if(arr.length){all=arr.map(x=>({name:x.name||x.title||"Unknown",cls:classMap[x.class&&((x.class.id||x.class.name||"").toString().toLowerCase().replaceAll(" ",""))]||classMap[(x.class&&x.class.id)||""]||"役割未登録",rarity:rarityMap[((x.rarity&&x.rarity.id)||"").toLowerCase()]||"情報確認中",source:"Brawlify"})).sort((a,b)=>a.name.localeCompare(b.name));}}catch(e){/* fallback data remains available */}render();}
+load();render();
+</script>
+</body></html>
