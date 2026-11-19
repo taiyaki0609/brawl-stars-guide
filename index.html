@@ -172,15 +172,23 @@ async function loadHyper(){
   const manualHyperData={
    rico:{
     Name:"Trick Shot King",
-    Description:"スーパーの弾が壁に当たったとき、通常よりも遠くまで跳ね返る。"
+    Description:"スーパーの弾がさらに遠くまで跳ね返る。ハイパーチャージ中はダメージが5%、移動速度が20%上昇し、5%のシールドを得る。"
    },
    cosmo:{
     Name:"Cosmic Capture",
-    Description:"ハイパー弾が相手を自動で追尾し、命中すると2秒間その場に拘束する。"
+    Description:"ハイパー状態の弾が相手を追尾し、命中すると2秒間その場に拘束する。"
    },
    vince:{
     Name:"Bug Swarm",
     Description:"スーパーが常に最大パワーになり、周囲にハイパーチャージ状態のイモムシを放つ。"
+   },
+   ruby:{
+    Name:"All In!",
+    Description:"スーパーの範囲が大きくなり、弾が当たった相手を追加の弾で爆発させる。"
+   },
+   mandy:{
+    Name:"Sugar For All!",
+    Description:"スーパーを3方向に発射する。"
    }
   };
   for(const [alias,data] of Object.entries(manualHyperData)){
