@@ -128,32 +128,41 @@ async function loadHyper(){
    getJson("/game/localization/texts")
   ]);
   const norm=v=>String(v||"").toLowerCase().normalize("NFKC").replace(/[^a-z0-9]/g,"");
-  const textRows=Object.values(texts||{});
-  const textFor=value=>hyperTextLookup(texts,value);
+  const skillRows=Object.entries(skills||{});
+  const textFor=value=>{
+   const key=String(value||"").trim();
+   if(!key)return "";
+   const row=texts?.[key]||Object.values(texts||{}).find(x=>String(x?.TID||"")===key);
+   return row?.EN||row?.JP||row?.JA||row?.en||"";
+  };
   const brawlerAliases=new Map();
   brawlers.forEach(b=>[b.name,b.hash,b.path,b.fankit].filter(Boolean).forEach(v=>brawlerAliases.set(norm(v),b)));
-  const charRows=Object.entries(chars||{});
-  const resolved=charRows.map(([key,c])=>{
-   const localized=textFor(c?.TID);
-   const brawler=brawlerAliases.get(norm(key))||brawlerAliases.get(norm(c?.ItemName))||brawlerAliases.get(norm(localized));
-   return {key,c,brawler,localized};
-  }).filter(x=>x.c?.OverchargedUltimateSkill&&x.brawler);
-  const skillRows=Object.entries(skills||{});
-  hyperRows=resolved.map(({key,c,brawler})=>{
-   const skillKey=String(c.OverchargedUltimateSkill);
-   const skill=skills?.[skillKey]||skillRows.find(([name,row])=>norm(name)===norm(skillKey)||String(row?.id||"")===skillKey)?.[1]||null;
-   if(!skill)return null;
-   const title=textFor(skill.TID)||skill.Name||"ハイパーチャージ";
-   const desc=textFor(skill.Desc)||textFor(skill.DescriptionTID)||skill.Desc||skill.Description||"";
-   const overchargeSkill=skill.OverchargedVersion?skills?.[String(skill.OverchargedVersion)]:null;
-   const overchargeDesc=overchargeSkill?(textFor(overchargeSkill.Desc)||textFor(overchargeSkill.TID)||""):"";
-   const effect=desc||overchargeDesc||"効果の説明はゲームデータに登録されていません。";
-   return {brawler:brawler.name,image:brawler.imageUrl2,skill:skillKey,skillData:{Name:title,Description:effect},hyperImage:""};
-  }).filter(Boolean);
-  hyperRows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
+  const characterRows=Object.entries(chars||{});
+  const rows=[];
+  for(const [key,ch] of characterRows){
+   const hyperKey=String(ch?.OverchargedUltimateSkill||"");
+   if(!hyperKey)continue;
+   const base=skills?.[hyperKey]||skillRows.find(([name,row])=>norm(name)===norm(hyperKey)||String(row?.id||"")===hyperKey)?.[1]||null;
+   const upgradedKey=String(base?.OverchargedVersion||"");
+   const upgraded=upgradedKey?(skills?.[upgradedKey]||skillRows.find(([name,row])=>norm(name)===norm(upgradedKey)||String(row?.id||"")===upgradedKey)?.[1]||null):null;
+   const actual=upgraded||base;
+   const charName=textFor(ch?.TID);
+   const brawler=brawlerAliases.get(norm(key))||brawlerAliases.get(norm(ch?.ItemName))||brawlerAliases.get(norm(charName));
+   if(!brawler)continue;
+   const title=textFor(actual?.TID)||textFor(base?.TID)||"ハイパーチャージ";
+   const desc=textFor(actual?.Desc)||textFor(actual?.TIDDesc)||textFor(base?.Desc)||"";
+   rows.push({
+    brawler:brawler.name,
+    image:brawler.imageUrl2,
+    skill:hyperKey,
+    skillData:{Name:title,Description:desc||"このハイパーチャージの効果説明は、ゲームデータから取得できませんでした。"},
+    hyperImage:""
+   });
+  }
+  hyperRows=rows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
   renderHyper();
   if(selected)showBrawler(selected);
-  console.info("Hypercharge mapping diagnostic:",{charactersWithHyper:charRows.filter(([,c])=>c?.OverchargedUltimateSkill).length,matched:hyperRows.length,unmatched:charRows.filter(([,c])=>c?.OverchargedUltimateSkill&&!resolved.some(x=>x.key===c.Name)).map(([k])=>k),examples:hyperRows.slice(0,5)});
+  console.info("Hypercharge resolved:",{characterRows:characterRows.length,withHyper:characterRows.filter(([,x])=>x?.OverchargedUltimateSkill).length,displayed:hyperRows.length,examples:hyperRows.slice(0,8)});
  }catch(e){
   console.error("Hypercharge data error:",e);
   hyperRows=[];
