@@ -501,7 +501,11 @@ async function loadSkins(){
    confTopKeys:Object.keys(unwrap(confRaw)||{}).slice(0,12),
    skinSamples:skinEntries.slice(0,5).map(([key,row])=>({key,Name:row?.Name,Conf:row?.Conf,SkinConf:row?.SkinConf,fields:Object.keys(row||{}).slice(0,18)})),
    confSamples:confEntries.slice(0,5).map(([key,row])=>({key,Name:row?.Name,Character:row?.Character,fields:Object.keys(row||{}).slice(0,18)})),
-   confLookupSamples:skinEntries.slice(0,12).map(([key,row])=>({skin:key,conf:row?.Conf,found:confByKey.has(norm(row?.Conf||row?.SkinConf||""))}))
+   confLookupSamples:skinEntries.slice(0,12).map(([key,row])=>({skin:key,conf:row?.Conf,found:confByKey.has(norm(row?.Conf||row?.SkinConf||""))})),
+   characterSamples:charEntries.filter(([key,row])=>row?.Type==="Hero"||row?.Type==="hero").slice(0,12).map(([key,row])=>({key,id:row?.id,Name:row?.Name,ItemName:row?.ItemName,TID:row?.TID,DefaultSkin:row?.DefaultSkin,EN:getText(row?.TID)?.EN})),
+   brawlerSamples:brawlers.slice(0,12).map(b=>({name:b.name,id:b.id,hash:b.hash,path:b.path,fankit:b.fankit})),
+   missingBrawlerDetails:brawlers.filter(b=>!skins.some(s=>s.brawler===b.name)).map(b=>({name:b.name,id:b.id,hash:b.hash,path:b.path,fankit:b.fankit})),
+   confCharacterSamples:[...new Set(confEntries.map(([key,row])=>String(row?.Character||"")).filter(Boolean))].slice(0,35).map(character=>({character,charRowFound:charByAlias.has(norm(character)),charRow:charByAlias.get(norm(character))?.key,charId:charByAlias.get(norm(character))?.row?.id,charName:charByAlias.get(norm(character))?.row?.Name,itemName:charByAlias.get(norm(character))?.row?.ItemName,translated:charByAlias.get(norm(character))?.translated}))
   });
  }catch(e){
   console.error("Skin data error:",e);skins=[];renderSkinAudit();
