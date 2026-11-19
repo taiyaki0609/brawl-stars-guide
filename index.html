@@ -168,22 +168,34 @@ async function loadHyper(){
     hyperImage:""
    });
   }
-  // 確認済みのハイパーチャージ情報を補完（ゲームCSVに説明文がない場合の表示用）
-  const rico=brawlers.find(b=>[b.name,b.hash,b.path,b.fankit].some(v=>norm(v).includes("rico")));
-  if(rico){
-   const ricoData={
-    brawler:rico.name,
-    image:rico.imageUrl2,
-    skill:"Rico_Hypercharge",
-    skillData:{
-     Name:"Trick Shot King",
-     Description:"スーパーの弾が壁に当たったとき、通常よりも遠くまで跳ね返る。ハイパーチャージ中はダメージが25%、移動速度が26%上昇し、5%のシールドを得る。"
-    },
+  // 確認済みの専用データで、ゲームCSVに説明がないキャラクターを補完
+  const manualHyperData={
+   rico:{
+    Name:"Trick Shot King",
+    Description:"スーパーの弾が壁に当たったとき、通常よりも遠くまで跳ね返る。"
+   },
+   cosmo:{
+    Name:"Cosmic Capture",
+    Description:"ハイパー弾が相手を自動で追尾し、命中すると2秒間その場に拘束する。"
+   },
+   vince:{
+    Name:"Bug Swarm",
+    Description:"スーパーが常に最大パワーになり、周囲にハイパーチャージ状態のイモムシを放つ。"
+   }
+  };
+  for(const [alias,data] of Object.entries(manualHyperData)){
+   const brawler=brawlers.find(b=>[b.name,b.hash,b.path,b.fankit].some(v=>norm(v)===alias));
+   if(!brawler)continue;
+   const item={
+    brawler:brawler.name,
+    image:brawler.imageUrl2,
+    skill:"manual_"+alias,
+    skillData:{Name:data.Name,Description:data.Description},
     hyperImage:""
    };
-   const existing=rows.findIndex(x=>x.brawler.toLowerCase()===rico.name.toLowerCase());
-   if(existing>=0)rows[existing]=ricoData;
-   else rows.push(ricoData);
+   const existing=rows.findIndex(x=>x.brawler.toLowerCase()===brawler.name.toLowerCase());
+   if(existing>=0)rows[existing]=item;
+   else rows.push(item);
   }
   hyperRows=rows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
   renderHyper();
