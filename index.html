@@ -34,7 +34,7 @@ footer{margin-top:25px;padding:25px 0 38px;border-top:1px solid var(--line);font
 <section id="builds"><div class="head"><div><div class="tag">おすすめ構成</div><h2>ガジェット・スターパワー・ギア</h2><p>キャラクターを選ぶと能力の一覧と構成の考え方を表示します。</p></div></div><div class="panel"><div class="controls"><select id="buildBrawler" class="map-select"><option value="">キャラクターを選択</option></select></div><div id="buildDetail" class="subtle">キャラクターを選択してください。</div><div class="notice">ギアの最適解はマップ・モード・プレイスタイルで変わります。ここでは役割に合わせた候補を表示します。未確認の勝率データを使って「最強」と断定しません。</div></div></section>
 <section id="skins"><div class="head"><div><div class="tag">スキン図鑑</div><h2>スキン情報</h2><p>公式アップデートで発表されたスキンを掲載しています。</p></div></div><div class="controls"><input id="skinSearch" type="search" placeholder="スキン名・キャラクター名で検索"><select id="skinRarity"><option value="">すべての種類</option><option>エピック</option><option>ミシック</option><option>レジェンド</option><option>クロマ</option><option>その他</option></select></div><div id="skinAudit" class="panel" style="margin:12px 0;padding:14px"><strong>スキン取得チェック</strong><p class="subtle">キャラクターごとの取得件数を確認しています…</p></div><div class="skin-grid" id="skinList"></div><div class="notice">スキンは見た目を変更するアイテムで、キャラクターの攻撃力や体力を強化するものではありません。入手期間・価格は変更されるため、ゲーム内ショップで確認してください。</div></section>
 
-<section id="hyper"><div class="head"><div><div class="tag">HYPERCHARGE LIBRARY</div><h2>ハイパーチャージ図鑑</h2><p>ゲームデータに登録されたハイパーチャージ対応キャラクターを表示します。</p></div><div class="subtle" id="hyperCount">データ取得中…</div></div><div class="controls"><input id="hyperSearch" type="search" placeholder="キャラクター名で検索"></div><div class="hyper-grid" id="hyperList"></div><div class="notice">ハイパーチャージの詳細な数値や最新の強さ評価は、アップデートで変わる場合があります。ここではゲームデータ上の対応状況を中心に表示します。</div></section>
+<section id="hyper"><div class="head"><div><div class="tag">HYPERCHARGE LIBRARY</div><h2>ハイパーチャージ図鑑</h2><p>ゲームデータに登録されたハイパーチャージ対応キャラクターを表示します。</p></div><div class="subtle" id="hyperCount">データ取得中…</div></div><div class="controls"><input id="hyperSearch" type="search" placeholder="キャラクター名で検索"></div><div class="hyper-grid" id="hyperList"></div><div class="panel" id="hyperAudit" style="margin-top:12px;padding:14px"><strong>取得状況チェック</strong><p class="subtle">データを確認しています…</p></div><div class="notice">ハイパーチャージの詳細な数値や最新の強さ評価は、アップデートで変わる場合があります。ここではゲームデータ上の対応状況を中心に表示します。</div></section>
 <section id="rankings"><div class="head"><div><div class="tag">MAP MATCHUP</div><h2>マップ別おすすめランキング</h2><p>選んだモードに対する役割相性を点数化した候補一覧です。</p></div></div><div class="panel"><div class="controls"><select id="rankMode"><option value="">ゲームモードを選択</option></select><input id="rankSearch" type="search" placeholder="キャラクター名で絞り込み"></div><div id="rankList" class="recommend"></div><div class="notice">この順位はゲームモードとキャラクターの役割を使った独自の相性目安です。公式勝率・使用率・プレイヤー統計ではありません。実際のマップ形状やバランス調整も確認してください。</div><h3>勝率・使用率データ</h3><div class="skin-empty">現在接続している公開データには、信頼できる全キャラクター共通の勝率・使用率データが含まれていません。数字を作って表示することはせず、統計データ欄は未取得として扱います。</div></div></section>
 <section id="progress"><div class="head"><div><div class="tag">UPGRADE PLANNER</div><h2>キャラクター育成ガイド</h2><p>限られたコインや強化素材を使うときの基本方針です。</p></div></div><div class="panel"><div class="controls"><select id="progressRole"><option value="all">すべての役割</option><option value="アタッカー">アタッカー</option><option value="タンク">タンク</option><option value="スナイパー">スナイパー</option><option value="グレネーディア">グレネーディア</option><option value="コントローラー">コントローラー</option><option value="アサシン">アサシン</option><option value="サポート">サポート</option></select></div><div id="progressList" class="recommend"></div><div class="notice">育成の優先度はプレイ頻度・得意なモード・所持状況で変わります。全キャラを一度に最大強化するより、よく使うキャラから順番に育てるのがおすすめです。</div></div></section>
 <section id="draft"><div class="head"><div><div class="tag">RANKED DRAFT ASSISTANT</div><h2>ランク戦ドラフト支援</h2><p>モードと役割を選んで、ピック候補と編成の考え方を確認。</p></div></div><div class="panel"><div class="controls"><select id="draftMode"><option value="">ゲームモード</option></select><select id="draftRole"><option value="">自分が担当したい役割</option><option>アタッカー</option><option>タンク</option><option>スナイパー</option><option>グレネーディア</option><option>コントローラー</option><option>アサシン</option><option>サポート</option></select><input id="draftBan" type="text" placeholder="相手に使われたくないキャラ名（任意）"></div><button class="btn" id="draftGo">ピック候補を表示</button><div id="draftResult" class="recommend"></div><div class="notice">ドラフトでは、味方との役割バランス、相手の射程、壁・草むら、カウンター関係を考えよう。同じ役割だけで固めないことも重要です。候補は統計的な最適解ではありません。</div></div></section>
@@ -154,6 +154,8 @@ async function loadHyper(){
   });
   const rows=[];
   const unresolved=[];
+  const missingSkills=[];
+  const missingDescriptions=[];
   for(const [key,ch] of Object.entries(chars||{})){
    const hyperKey=ch?.OverchargedUltimateSkill;
    if(!hyperKey)continue;
@@ -169,6 +171,8 @@ async function loadHyper(){
    }
    const base=findSkill(hyperKey);
    const upgraded=findSkill(base?.OverchargedVersion);
+   if(!base)missingSkills.push({character:key,skill:String(hyperKey)});
+   if(base&&!textFor(base?.Desc)&&!textFor(upgraded?.Desc)&&!(typeof base?.Desc==="string"&&base.Desc.length>12&&!/^TID_/i.test(base.Desc))&&!(typeof upgraded?.Desc==="string"&&upgraded.Desc.length>12&&!/^TID_/i.test(upgraded.Desc)))missingDescriptions.push({character:key,skill:String(hyperKey),baseName:base?.Name||"",baseDesc:base?.Desc||"",upgradedDesc:upgraded?.Desc||""});
    const name=
     textFor(base?.TID)||
     textFor(upgraded?.TID)||
@@ -206,6 +210,13 @@ async function loadHyper(){
    if(existing>=0)rows[existing]=item;else rows.push(item);
   }
   hyperRows=rows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
+  const hyperTotal=Object.values(chars||{}).filter(x=>!!x?.OverchargedUltimateSkill).length;
+  const noDescription=hyperRows.filter(x=>String(x.skillData?.Description||"").startsWith("このキャラクターのハイパーチャージに対応しています。"));
+  $("hyperAudit").innerHTML='<strong>取得状況チェック</strong><p class="subtle">ゲームデータ上の対応数：'+hyperTotal+'人 ／ 図鑑表示：'+hyperRows.length+'人 ／ 名前を照合できない：'+unresolved.length+'人 ／ スキル情報なし：'+missingSkills.length+'件 ／ 効果説明なし：'+noDescription.length+'人</p>'+
+   (unresolved.length?'<details open><summary>図鑑に表示できていないキャラクター</summary><p class="subtle">'+unresolved.map(x=>esc(x.character)+'（スキル：'+esc(x.hyperSkill)+'）').join('、')+'</p></details>':'')+
+   (missingSkills.length?'<details><summary>スキルデータが見つからない項目</summary><p class="subtle">'+missingSkills.map(x=>esc(x.character)+'（'+esc(x.skill)+'）').join('、')+'</p></details>':'')+
+   (noDescription.length?'<details><summary>効果説明が未取得のキャラクター</summary><p class="subtle">'+noDescription.map(x=>esc(x.brawler)+'（'+esc(x.skill)+'）').join('、')+'</p></details>':'')+
+   '<p class="subtle">詳しい取得内容はブラウザーの開発者コンソールにも記録します。</p>';
   renderHyper();
   if(selected)showBrawler(selected);
   console.info("Hypercharge data audit:",{
@@ -213,7 +224,9 @@ async function loadHyper(){
    charactersWithHyper:Object.values(chars||{}).filter(x=>!!x?.OverchargedUltimateSkill).length,
    displayed:hyperRows.length,
    unresolved:unresolved,
-   missingSkillRows:Object.entries(chars||{}).filter(([,x])=>x?.OverchargedUltimateSkill&&!findSkill(x.OverchargedUltimateSkill)).map(([k])=>k)
+   missingSkillRows:missingSkills,
+   missingDescriptions,
+   unresolved
   });
  }catch(e){
   console.error("Hypercharge data error:",e);
