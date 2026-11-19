@@ -32,7 +32,7 @@ footer{margin-top:25px;padding:25px 0 38px;border-top:1px solid var(--line);font
 <section id="maps"><div class="head"><div><div class="tag">マップ別攻略</div><h2>マップに合うキャラを選ぼう</h2><p>現在の公開マップデータから選べます。マップを選択するとおすすめの役割とキャラ候補を表示します。</p></div></div>
 <div class="panel"><div class="controls"><select id="modeFilter"><option value="">すべてのゲームモード</option></select><input id="mapSearch" type="search" placeholder="マップ名で検索"></div><div class="subtle" id="mapCount">マップ情報を読み込み中…</div><div class="map-grid" id="mapList"></div><div class="detail" id="mapDetail"></div><div class="notice">おすすめはマップの地形・モードに合わせた攻略上の候補です。勝率ランキングや公式の最強キャラを示すものではありません。実際の障害物配置と味方編成も確認してください。</div></div></section>
 <section id="builds"><div class="head"><div><div class="tag">おすすめ構成</div><h2>ガジェット・スターパワー・ギア</h2><p>キャラクターを選ぶと能力の一覧と構成の考え方を表示します。</p></div></div><div class="panel"><div class="controls"><select id="buildBrawler" class="map-select"><option value="">キャラクターを選択</option></select></div><div id="buildDetail" class="subtle">キャラクターを選択してください。</div><div class="notice">ギアの最適解はマップ・モード・プレイスタイルで変わります。ここでは役割に合わせた候補を表示します。未確認の勝率データを使って「最強」と断定しません。</div></div></section>
-<section id="skins"><div class="head"><div><div class="tag">スキン図鑑</div><h2>スキン情報</h2><p>公式アップデートで発表されたスキンを掲載しています。</p></div></div><div class="controls"><input id="skinSearch" type="search" placeholder="スキン名・キャラクター名で検索"><select id="skinRarity"><option value="">すべての種類</option><option>エピック</option><option>ミシック</option><option>レジェンド</option><option>クロマ</option><option>その他</option></select></div><div class="skin-grid" id="skinList"></div><div class="notice">スキンは見た目を変更するアイテムで、キャラクターの攻撃力や体力を強化するものではありません。入手期間・価格は変更されるため、ゲーム内ショップで確認してください。</div></section>
+<section id="skins"><div class="head"><div><div class="tag">スキン図鑑</div><h2>スキン情報</h2><p>公式アップデートで発表されたスキンを掲載しています。</p></div></div><div class="controls"><input id="skinSearch" type="search" placeholder="スキン名・キャラクター名で検索"><select id="skinRarity"><option value="">すべての種類</option><option>エピック</option><option>ミシック</option><option>レジェンド</option><option>クロマ</option><option>その他</option></select></div><div id="skinAudit" class="panel" style="margin:12px 0;padding:14px"><strong>スキン取得チェック</strong><p class="subtle">キャラクターごとの取得件数を確認しています…</p></div><div class="skin-grid" id="skinList"></div><div class="notice">スキンは見た目を変更するアイテムで、キャラクターの攻撃力や体力を強化するものではありません。入手期間・価格は変更されるため、ゲーム内ショップで確認してください。</div></section>
 
 <section id="hyper"><div class="head"><div><div class="tag">HYPERCHARGE LIBRARY</div><h2>ハイパーチャージ図鑑</h2><p>ゲームデータに登録されたハイパーチャージ対応キャラクターを表示します。</p></div><div class="subtle" id="hyperCount">データ取得中…</div></div><div class="controls"><input id="hyperSearch" type="search" placeholder="キャラクター名で検索"></div><div class="hyper-grid" id="hyperList"></div><div class="notice">ハイパーチャージの詳細な数値や最新の強さ評価は、アップデートで変わる場合があります。ここではゲームデータ上の対応状況を中心に表示します。</div></section>
 <section id="rankings"><div class="head"><div><div class="tag">MAP MATCHUP</div><h2>マップ別おすすめランキング</h2><p>選んだモードに対する役割相性を点数化した候補一覧です。</p></div></div><div class="panel"><div class="controls"><select id="rankMode"><option value="">ゲームモードを選択</option></select><input id="rankSearch" type="search" placeholder="キャラクター名で絞り込み"></div><div id="rankList" class="recommend"></div><div class="notice">この順位はゲームモードとキャラクターの役割を使った独自の相性目安です。公式勝率・使用率・プレイヤー統計ではありません。実際のマップ形状やバランス調整も確認してください。</div><h3>勝率・使用率データ</h3><div class="skin-empty">現在接続している公開データには、信頼できる全キャラクター共通の勝率・使用率データが含まれていません。数字を作って表示することはせず、統計データ欄は未取得として扱います。</div></div></section>
@@ -133,7 +133,14 @@ async function loadHyper(){
 }
 function renderDraft(){const m=$("draftMode").value,r=$("draftRole").value,ban=$("draftBan").value.trim().toLowerCase();if(!m){$("draftResult").innerHTML='<div class="skin-empty">先にゲームモードを選んでください。</div>';return;}let rows=brawlers.filter(b=>(!r||role(b)===r)&&!b.name.toLowerCase().includes(ban)).map(b=>({...b,match:modeScore(b,m)+(r&&role(b)===r?12:0)})).sort((a,b)=>b.match-a.match).slice(0,6);$("draftResult").innerHTML=rows.map((b,i)=>'<div class="rec rank-row">'+(b.imageUrl2?'<img src="'+esc(b.imageUrl2)+'" alt="">':'')+'<div><strong>候補 '+(i+1)+'：'+esc(b.name)+'</strong><small>'+esc(role(b))+'｜モード相性の目安 '+b.match+'</small></div></div>').join("")||'<div class="skin-empty">条件に合う候補がありません。</div>';}
 
-let skins=[];
+let skins=[],skinAudit={unmatched:[],total:0,matched:0};
+function renderSkinAudit(){
+ const counts=new Map(brawlers.map(b=>[b.name,0]));
+ skins.forEach(s=>counts.set(s.brawler,(counts.get(s.brawler)||0)+1));
+ const missing=brawlers.filter(b=>(counts.get(b.name)||0)===0);
+ const rows=brawlers.map(b=>'<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid #263653"><span>'+esc(b.name)+'</span><b style="color:'+(counts.get(b.name)>0?'#62d99b':'#ff9b9b')+'">'+(counts.get(b.name)||0)+'件</b></div>').join("");
+ $("skinAudit").innerHTML='<strong>スキン取得チェック</strong><p class="subtle">キャラクター '+brawlers.length+'人 ／ 紐付けできたスキン '+skins.length+'件 ／ 未紐付けデータ '+skinAudit.unmatched.length+'件</p><details><summary>キャラクター別の取得件数を見る（未取得 '+missing.length+'人）</summary><div style="max-height:320px;overflow:auto;margin-top:8px">'+rows+'</div></details>'+(missing.length?'<p class="subtle" style="color:#ffb0b0">スキン0件：'+missing.map(b=>esc(b.name)).join("、")+'</p>':'<p class="subtle">すべてのキャラクターに1件以上のスキンが紐付いています。</p>')+(skinAudit.unmatched.length?'<details><summary>キャラクターに紐付けできなかったデータ（先頭100件）</summary><p class="subtle">'+skinAudit.unmatched.slice(0,100).map(esc).join("、")+'</p></details>':'');
+}
 function renderSkins(){
  const q=$("skinSearch").value.trim().toLocaleLowerCase().normalize("NFKC"),r=$("skinRarity").value;
  const rows=skins.filter(x=>(!r||x.kind===r)&&(x.name+" "+x.brawler+" "+x.obtain).toLocaleLowerCase().normalize("NFKC").includes(q));
@@ -173,13 +180,13 @@ async function loadSkins(){
    return brawler?{brawler,characterKey}:null;
   };
   const allRows=Object.entries(skinData||{});
-  let matchedCount=0,unmatchedCount=0,missingIdCount=0;
+  let matchedCount=0,unmatchedCount=0,missingIdCount=0;const unmatchedNames=[];
   skins=allRows.map(([key,x])=>{
    if(!x)return null;
    const confKey=String(x.Conf||"");
    const conf=confByKey.get(norm(confKey));
    const owner=ownerForConf(conf);
-   if(!owner){unmatchedCount++;return null;}
+   if(!owner){unmatchedCount++;unmatchedNames.push(key+" (Conf: "+confKey+")");return null;}
    const id=Number(x.id||x.Id||(/^290\\d+$/.test(key)?key:null));
    if(!Number.isFinite(id)||id<=0){missingIdCount++;return null;}
    matchedCount++;
@@ -189,12 +196,15 @@ async function loadSkins(){
    const cost=x.CostGems?x.CostGems+"エメラルド":x.CostCoins?x.CostCoins+"コイン":"";
    return {id,name,brawler:owner.brawler.name,ownerKey:owner.characterKey,kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image,fallback};
   }).filter(x=>x&&x.name&&!/Default|Base/i.test(x.name));
+  skinAudit={unmatched:unmatchedNames,total:allRows.length,matched:matchedCount};
   renderSkins();
+  renderSkinAudit();
   if(selected)showBrawler(selected);
   console.info("Skin mapping diagnostic:",{total:allRows.length,matched:matchedCount,unmatched:unmatchedCount,missingId:missingIdCount,displayed:skins.length,rico:skins.filter(x=>x.brawler==="Rico").map(x=>({name:x.name,id:x.id}))});
  }catch(e){
   console.error("Skin data error:",e);
   skins=[];
+  renderSkinAudit();
   $("skinList").innerHTML='<div class="skin-empty">スキンデータを取得できませんでした。</div>';
  }
 }
