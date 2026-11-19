@@ -148,10 +148,9 @@ async function loadHyper(){
     String(row?.id??row?.Id??"")===key
    )?.[1]||null;
   };
-  const brawlerById=new Map(brawlers.map(b=>[String(b.id),b]));
   const brawlerByAlias=new Map();
   brawlers.forEach(b=>{
-   [b.name,b.hash,b.path,b.fankit].filter(v=>v!==null&&v!==undefined).forEach(v=>brawlerByAlias.set(norm(v),b));
+   [b.name,b.hash,b.path,b.fankit,b.id].filter(v=>v!==null&&v!==undefined).forEach(v=>brawlerByAlias.set(norm(v),b));
   });
   const rows=[];
   const unresolved=[];
@@ -160,7 +159,6 @@ async function loadHyper(){
    if(!hyperKey)continue;
    const translated=textFor(ch?.TID);
    const brawler=
-    brawlerById.get(String(ch?.id))||
     brawlerByAlias.get(norm(ch?.ItemName))||
     brawlerByAlias.get(norm(ch?.Name))||
     brawlerByAlias.get(norm(translated))||
