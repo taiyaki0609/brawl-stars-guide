@@ -427,20 +427,34 @@ async function loadSkins(){
   const norm=v=>String(v||"").toLowerCase().normalize("NFKC").replace(/[^a-z0-9]/g,"");
   const brawlerByAlias=new Map();
   brawlers.forEach(b=>{
-   [b.name,b.hash,b.path,b.fankit].filter(Boolean).forEach(v=>brawlerByAlias.set(norm(v),b));
+   [b.name,b.hash,b.path,b.fankit,b.id].filter(v=>v!==null&&v!==undefined&&v!=="").forEach(v=>brawlerByAlias.set(norm(v),b));
   });
   const charEntries=Object.entries(charData||{});
-  const charByKey=new Map(charEntries.map(([key,row])=>[norm(key),row]));
-  const confByKey=new Map(Object.entries(confData||{}).map(([key,row])=>[norm(key),row]));
+  const charByKey=new Map(charEntries.map(([key,row])=>[norm(key),{key,row}]));
+  const confByKey=new Map(Object.entries(confData||{}).map(([key,row])=>[norm(key),{key,row}]));
   const texts=textData||{};
-  const ownerForConf=conf=>{
+  const ownerForConf=(conf,confKey="")=>{
    const characterKey=String(conf?.Character||"");
-   const row=charByKey.get(norm(characterKey));
-   if(!row)return null;
-   const translated=texts[row.TID]?.EN||texts[row.TID]?.en||"";
-   const item=String(row.ItemName||"");
-   const brawler=brawlerByAlias.get(norm(item))||brawlerByAlias.get(norm(translated))||brawlerByAlias.get(norm(row.Name));
-   return brawler?{brawler,characterKey}:null;
+   const charEntry=charByKey.get(norm(characterKey));
+   const row=charEntry?.row;
+   const translated=row?(texts[row.TID]?.EN||texts[row.TID]?.en||""):"";
+   const candidates=[
+    characterKey,
+    charEntry?.key,
+    row?.ItemName,
+    translated,
+    row?.Name,
+    conf?.Name,
+    confKey,
+    String(confKey||"").split(/[_-]/)[0]
+   ].filter(Boolean);
+   for(const candidate of candidates){
+    const direct=brawlerByAlias.get(norm(candidate));
+    if(direct)return {brawler:direct,characterKey:characterKey||candidate};
+    const prefix=norm(candidate).replace(/(skin|conf|default|base)$/i,"");
+    if(prefix&&brawlerByAlias.has(prefix))return {brawler:brawlerByAlias.get(prefix),characterKey:characterKey||candidate};
+   }
+   return null;
   };
   const allRows=Object.entries(skinData||{});
   let matchedCount=0,unmatchedCount=0,missingIdCount=0;const unmatchedNames=[];
@@ -448,9 +462,9 @@ async function loadSkins(){
    if(!x)return null;
    const confKey=String(x.Conf||"");
    const conf=confByKey.get(norm(confKey));
-   const owner=ownerForConf(conf);
+   const owner=ownerForConf(conf,confKey);
    if(!owner){unmatchedCount++;unmatchedNames.push(key+" (Conf: "+confKey+")");return null;}
-   const id=Number(x.id||x.Id||(/^290\\d+$/.test(key)?key:null));
+   const id=Number(x.id||x.Id||(/^290[0-9]+$/.test(key)?key:null));
    if(!Number.isFinite(id)||id<=0){missingIdCount++;return null;}
    matchedCount++;
    const name=x.Name||key;
