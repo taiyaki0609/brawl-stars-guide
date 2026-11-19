@@ -75,7 +75,7 @@ function renderRoster(){const q=$("search").value.trim().toLowerCase(),cl=$("cla
 function abilityHint(x){const t=((x.description||"")+" "+(x.name||"")).toLowerCase();const hints=[[/heal|healing|health|recover/,"回復・体力維持に役立つ効果"],[/shield|protect|damage reduction/,"ダメージを防ぎ、生存力を高める効果"],[/slow|slows/,"相手の動きを遅くする効果"],[/stun|knockback|push|pull/,"相手の動きを止めたり、位置をずらしたりする効果"],[/speed|faster|boost/,"移動や行動の速さを高める効果"],[/reload|ammo|attack again/,"攻撃回数や弾の管理を助ける効果"],[/invisible|invisibility|hidden/,"身を隠して奇襲や移動に使える効果"],[/damage|explosion|explode|attack/,"攻撃やダメージを強化する効果"],[/jump|dash|leap/,"素早く移動して位置を変える効果"],[/poison|burn/,"継続的に相手へダメージを与える効果"]];return (hints.find(([re])=>re.test(t))||[])[1]||"固有の効果を持つ能力。説明と実際の使い勝手を確認しよう。"} 
 function scoreAbility(x,kind,r){const t=((x.description||"")+" "+(x.name||"")).toLowerCase();let n=0;if(/heal|shield|slow|stun|knockback|speed|dash|jump|invisible/.test(t))n+=2;if(/damage|attack|reload|ammo|explosion/.test(t))n+=1;if(r==="サポート"&&/heal|shield|speed/.test(t))n+=3;if(r==="タンク"&&/heal|shield|damage reduction|knockback/.test(t))n+=3;if(r==="スナイパー"&&/range|damage|slow|vision/.test(t))n+=2;if(r==="アサシン"&&/dash|jump|speed|invisible|slow/.test(t))n+=3;if(kind==="star"&&/permanent|always|each|every/.test(t))n+=1;return n}
 function abilityHtml(items,label,kind,r){if(!items?.length)return '<p class="subtle">'+label+'は登録されていません。</p>';const active=items.filter(x=>x.released!==false);const best=active.slice().sort((a,b)=>scoreAbility(b,kind,r)-scoreAbility(a,kind,r))[0];return active.map(x=>'<div class="ability '+(x.id===best?.id?'recommended':'')+'">'+(x.imageUrl?'<img loading="lazy" src="'+esc(x.imageUrl)+'" alt="">':'')+'<div>'+(x.id===best?.id?'<span class="pick-label">おすすめ候補</span>':'')+'<strong>'+esc(x.name)+'</strong><p>'+esc(abilityHint(x))+'</p></div></div>').join("")}
-function skinHtmlFor(b){const rows=skins.filter(s=>s.brawler===b.name);if(!rows.length)return '<div class="skin-empty">このキャラクターのスキン情報はまだ取得できていません。スキン一覧のデータ対応を確認中です。</div>';return '<div class="skin-grid">'+rows.map(s=>'<article class="skin-card">'+(s.image?'<img loading="lazy" src="'+esc(s.image)+'" alt="'+esc(s.name)+'" onerror="this.style.display=\'none\'">':'')+'<div class="body"><h3>'+esc(s.name)+'</h3><p>'+esc(s.obtain||"入手方法はゲーム内で確認してください")+'</p></div></article>').join("")+'</div>';}
+function skinHtmlFor(b){const rows=skins.filter(s=>s.brawler===b.name||[b.hash,b.path,b.fankit].some(v=>v&&String(v).toLowerCase()===String(s.ownerKey||"").toLowerCase()));if(!rows.length)return '<div class="skin-empty">このキャラクターのスキン情報はまだ取得できていません。スキン一覧のデータ対応を確認中です。</div>';return '<div class="skin-grid">'+rows.map(s=>'<article class="skin-card">'+(s.image?'<img loading="lazy" src="'+esc(s.image)+'" alt="'+esc(s.name)+'" onerror="this.style.display=\'none\'">':'')+'<div class="body"><h3>'+esc(s.name)+'</h3><p>'+esc(s.obtain||"入手方法はゲーム内で確認してください")+'</p></div></article>').join("")+'</div>';}
 function hyperHtmlFor(b){const h=hyperRows.find(x=>x.brawler.toLowerCase()===b.name.toLowerCase());if(!h)return '<div class="skin-empty">ハイパーチャージ情報が登録されていないか、データを取得できていません。</div>';return '<div class="ability"><div>'+(h.skillData?.Name?'<strong>'+esc(h.skillData.Name)+'</strong>':'<strong>ハイパーチャージ対応</strong>')+'<p>'+esc(h.skillData?.Description||"ハイパーチャージ中はキャラクターの能力が強化されます。詳細な効果はゲーム内で確認してください。")+'</p></div></div>';}
 function bestMapsFor(b){const r=role(b);const relevant=maps.filter(m=>!m.disabled&&suggestedRoles(m).includes(r));const unique=[];const seen=new Set();for(const m of relevant){const key=m.gameMode?.name||"";if(!seen.has(key)){seen.add(key);unique.push(m);}}return unique.slice(0,6);}
 function compactSection(title,content,open=false){return '<details class="profile-section" '+(open?'open':'')+'><summary>'+title+'</summary><div class="profile-section-body">'+content+'</div></details>';}
@@ -135,21 +135,27 @@ function renderSkins(){
 }
 async function loadSkins(){
  try{
-  const [skinData,confData]=await Promise.all([
+  const [skinData,confData,charData,textData]=await Promise.all([
    getJson("/game/csv_logic/skins"),
-   getJson("/game/csv_logic/skin_confs")
+   getJson("/game/csv_logic/skin_confs"),
+   getJson("/game/csv_logic/characters"),
+   getJson("/game/localization/texts")
   ]);
-  const confs=confData||{};
+  const confs=confData||{}, chars=charData||{}, texts=textData||{};
   skins=Object.entries(skinData||{}).map(([key,x])=>{
    if(!x)return null;
    const name=x.Name||key;
-   const confKey=String(x.Conf||"");
-   const conf=confs[confKey]||{};
-   const ownerName=conf.Character||x.Character||x.Brawler||x.CharacterName||x.BrawlerName||"キャラクター情報なし";
-   const id=x.id||x.Id||(/^\d+$/.test(key)?key:null);
-   const image=x.imageUrl||x.ImageUrl||x.image||x.Image||(id?"https://cdn.brawlify.com/brawlers/skins/"+id+".png":"");
+   const conf=confs[String(x.Conf||"")]||{};
+   const ownerKey=String(conf.Character||x.Character||x.Brawler||x.CharacterName||x.BrawlerName||"");
+   const charRow=chars[ownerKey]||{};
+   const tid=charRow.TID||charRow.NameTID||"";
+   const localized=texts[tid]?.EN||texts[tid]?.en||"";
+   const matched=brawlers.find(v=>[v.hash,v.path,v.fankit].some(z=>z&&String(z).toLowerCase()===ownerKey.toLowerCase()));
+   const ownerName=matched?.name||localized||ownerKey||"キャラクター情報なし";
+   const id=Number(x.id||x.Id||(/^290\d+$/.test(key)?key:null));
+   const image=id?"https://cdn.bsinfox.com/brawlers/skins/"+id+".png":"";
    const cost=x.CostGems?x.CostGems+"エメラルド":x.CostCoins?x.CostCoins+"コイン":"";
-   return {id,name,brawler:ownerName,kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image};
+   return {id,name,brawler:ownerName,ownerKey,kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image};
   }).filter(x=>x&&x.name&&!/Default|Base/i.test(x.name));
   renderSkins();
   console.info("Skin data loaded:",skins.length);
