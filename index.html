@@ -218,10 +218,35 @@ async function loadHyper(){
    const existing=rows.findIndex(x=>x.brawler.toLowerCase()===brawler.name.toLowerCase());
    if(existing>=0)rows[existing]=item;else rows.push(item);
   }
+
+  // 公開されている全106種類のハイパーチャージ一覧を基準に補完する。
+  // 効果説明はゲーム内CSVで取得できた場合だけ採用し、推測では作らない。
+  const publicHyperCatalog=[["8-Bit","Aimbot"],["Alli","Swamp Snacking"],["Amber","Oil Spill"],["Angelo","In My Element"],["Ash","Rat King"],["Barley","Bottled-Up Rage"],["Bea","Protect the Queen"],["Belle","Magnetic"],["Berry","Double Scoops"],["Bibi","Out of Bounds"],["Bo","Catch a Bear"],["Bolt","Bowling Bolt"],["Bonnie","Daredevil"],["Brock","Rocket Barrage"],["Bull","Jaws of Steel"],["Buster","Plot Armor"],["Buzz","Buzzwatch"],["Byron","Unstable Concoction"],["Carl","Flamespin"],["Charlie","Pestilence"],["Chester","Crunchy, Chewy, Gooey"],["Chuck","Full Steam Ahead!"],["Clancy","Recall of Duty"],["Colette","Teen Spirit"],["Colt","Dual Wielding"],["Cordelius","Complete Darkness"],["Crow","Utility Knives"],["Damian","Jump in the Fire"],["Darryl","Barrel O' Bullets"],["Doug","Free Toppings"],["Draco","Fire and Flames"],["Dynamike","Boomer"],["Edgar","Outburst"],["El Primo","Gravity Leap"],["Emz","Overhyped Haze"],["Eve","Generations"],["Fang","Dragon Kick"],["Finx","Temporal Traveling"],["Frank","Seismic Smash"],["Gale","Blizzard"],["Gene","Hyper Hands"],["Gigi","Pas De Deux"],["Glowy","You Need a Friend"],["Gray","Another Dimension"],["Griff","Tax Rebate"],["Grom","Grom Bomb Goes Boom!"],["Gus","Spooky Pop"],["Hank","Homing Fish-Iles"],["Jacky","Seismic Event"],["Jae-Yong","Crowd-Pleaser"],["Janet","Magnum Opus"],["Jessie","Scrappy 2.0"],["Juju","Bokor"],["Kaze","Ancient Energy"],["Kenji","All You Can Eat"],["Kit","Making Biscuits"],["Larry & Lawrie","The Three-Bot Problem"],["Leon","Limbo"],["Lily","Germinate"],["Lola","Inflated Ego"],["Lou","Slushie Storm"],["Lumi","Drum Solo"],["Maisie","Aftermath"],["Mandy","Sugar for All!"],["Max","Unlimited Energy"],["Meeple","The Last Rulebender"],["Meg","Tungsten Toughness"],["Melodie","Flash Mob"],["Mico","Sound Check"],["Mina","Triplecane"],["Moe","The Big Cheese"],["Mortis","Blood Boomerang"],["Mr. P","Super Porters! Assemble!"],["Najia","Twin Snakes"],["Nani","Big Peep"],["Nita","Hyperbearing"],["Nori","Master Fisherman"],["Ollie","Ain't No Half-Supering"],["Otis","Silent Stunner"],["Pam","Mama's Love"],["Pearl","Pyrolytic"],["Penny","New Lobber"],["Pierce","Second Wave"],["Piper","Boppin'"],["Poco","Medic's Melody"],["R-T","360-Degree Surveillance"],["Rico","Trick Shot King"],["Rosa","Grasping Roots"],["Ruffs","The Goodest Boy"],["Sam","Hyper Fist"],["Sandy","Swift Winds"],["Shade","The Frightener"],["Shelly","Double Barrel"],["Sirius","Unlimited Power!"],["Spike","Blooming Season"],["Sprout","Thorns"],["Squeak","Bouncy Blob"],["Starr Nova","The Hypercharge"],["Stu","Infinitro"],["Surge","Stage 5"],["Tara","Supermassive"],["Tick","Headstrong"],["Trunk","Retread"],["Wendy","Green Energy"],["Willow","Psychic Safety"],["Ziggy","The Grand Vortex"]];
+  const catalogUnmatched=[];
+  for(const [catalogName,hyperName] of publicHyperCatalog){
+   const brawler=brawlers.find(b=>norm(b.name)===norm(catalogName));
+   if(!brawler){catalogUnmatched.push(catalogName);continue;}
+   const index=rows.findIndex(x=>norm(x.brawler)===norm(brawler.name));
+   const existing=index>=0?rows[index]:null;
+   const description=existing&& !String(existing.skill||"").startsWith("manual_") &&
+    existing.skillData?.Description &&
+    !String(existing.skillData.Description).startsWith("このキャラクターのハイパーチャージに対応しています。")
+      ?existing.skillData.Description
+      :"効果説明は未取得です。正確な効果はゲーム内のハイパーチャージ説明を確認してください。";
+   const item={
+    brawler:brawler.name,
+    image:brawler.imageUrl2,
+    skill:existing?.skill||("catalog_"+norm(catalogName)),
+    skillData:{Name:hyperName,Description:description},
+    hyperImage:existing?.hyperImage||""
+   };
+   if(index>=0)rows[index]=item;else rows.push(item);
+  }
   hyperRows=rows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
-  const hyperTotal=Object.values(chars||{}).filter(x=>!!x?.OverchargedUltimateSkill).length;
+  const hyperTotal=publicHyperCatalog.length;
   const noDescription=hyperRows.filter(x=>String(x.skillData?.Description||"").startsWith("このキャラクターのハイパーチャージに対応しています。"));
-  $("hyperAudit").innerHTML='<strong>取得状況チェック</strong><p class="subtle">ゲームデータ上の対応数：'+hyperTotal+'人 ／ 図鑑表示：'+hyperRows.length+'人 ／ 名前を照合できない：'+unresolved.length+'人 ／ スキル情報なし：'+missingSkills.length+'件 ／ 効果説明なし：'+noDescription.length+'人</p>'+
+  $("hyperAudit").innerHTML='<strong>取得状況チェック</strong><p class="subtle">基準カタログ：'+hyperTotal+'種類 ／ 図鑑表示：'+hyperRows.length+'人 ／ キャラクター未照合：'+catalogUnmatched.length+'人 ／ 効果説明なし：'+noDescription.length+'人</p>'+
+   (catalogUnmatched.length?'<details open><summary>キャラクター図鑑と照合できなかった項目</summary><p class="subtle">'+catalogUnmatched.map(esc).join('、')+'</p></details>':'')+
    (unresolved.length?'<details open><summary>図鑑に表示できていないキャラクター</summary><p class="subtle">'+unresolved.map(x=>esc(x.character)+'（スキル：'+esc(x.hyperSkill)+'）').join('、')+'</p></details>':'')+
    (missingSkills.length?'<details><summary>スキルデータが見つからない項目</summary><p class="subtle">'+missingSkills.map(x=>esc(x.character)+'（'+esc(x.skill)+'）').join('、')+'</p></details>':'')+
    (noDescription.length?'<details><summary>効果説明が未取得のキャラクター</summary><p class="subtle">'+noDescription.map(x=>esc(x.brawler)+'（'+esc(x.skill)+'）').join('、')+'</p></details>':'')+
