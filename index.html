@@ -75,7 +75,7 @@ function renderRoster(){const q=$("search").value.trim().toLowerCase(),cl=$("cla
 function abilityHint(x){const t=((x.description||"")+" "+(x.name||"")).toLowerCase();const hints=[[/heal|healing|health|recover/,"回復・体力維持に役立つ効果"],[/shield|protect|damage reduction/,"ダメージを防ぎ、生存力を高める効果"],[/slow|slows/,"相手の動きを遅くする効果"],[/stun|knockback|push|pull/,"相手の動きを止めたり、位置をずらしたりする効果"],[/speed|faster|boost/,"移動や行動の速さを高める効果"],[/reload|ammo|attack again/,"攻撃回数や弾の管理を助ける効果"],[/invisible|invisibility|hidden/,"身を隠して奇襲や移動に使える効果"],[/damage|explosion|explode|attack/,"攻撃やダメージを強化する効果"],[/jump|dash|leap/,"素早く移動して位置を変える効果"],[/poison|burn/,"継続的に相手へダメージを与える効果"]];return (hints.find(([re])=>re.test(t))||[])[1]||"固有の効果を持つ能力。説明と実際の使い勝手を確認しよう。"} 
 function scoreAbility(x,kind,r){const t=((x.description||"")+" "+(x.name||"")).toLowerCase();let n=0;if(/heal|shield|slow|stun|knockback|speed|dash|jump|invisible/.test(t))n+=2;if(/damage|attack|reload|ammo|explosion/.test(t))n+=1;if(r==="サポート"&&/heal|shield|speed/.test(t))n+=3;if(r==="タンク"&&/heal|shield|damage reduction|knockback/.test(t))n+=3;if(r==="スナイパー"&&/range|damage|slow|vision/.test(t))n+=2;if(r==="アサシン"&&/dash|jump|speed|invisible|slow/.test(t))n+=3;if(kind==="star"&&/permanent|always|each|every/.test(t))n+=1;return n}
 function abilityHtml(items,label,kind,r){if(!items?.length)return '<p class="subtle">'+label+'は登録されていません。</p>';const active=items.filter(x=>x.released!==false);const best=active.slice().sort((a,b)=>scoreAbility(b,kind,r)-scoreAbility(a,kind,r))[0];return active.map(x=>'<div class="ability '+(x.id===best?.id?'recommended':'')+'">'+(x.imageUrl?'<img loading="lazy" src="'+esc(x.imageUrl)+'" alt="">':'')+'<div>'+(x.id===best?.id?'<span class="pick-label">おすすめ候補</span>':'')+'<strong>'+esc(x.name)+'</strong><p>'+esc(abilityHint(x))+'</p></div></div>').join("")}
-function skinHtmlFor(b){const rows=skins.filter(s=>s.brawler===b.name||(s.ownerKeys||[s.ownerKey]).some(k=>[b.hash,b.path,b.fankit].some(v=>v&&String(v).toLowerCase()===String(k||"").toLowerCase())));if(!rows.length)return '<div class="skin-empty">このキャラクターのスキン情報はまだ取得できていません。スキン一覧のデータ対応を確認中です。</div>';return '<div class="skin-grid">'+rows.map(s=>'<article class="skin-card">'+(s.image?'<img loading="lazy" src="'+esc(s.image)+'" data-fallback="'+esc((s.fallback||[]).join("|"))+'" onerror="skinImageFallback(this)" alt="'+esc(s.name)+'">':'<div class="skin-placeholder">🎨</div>')+'<div class="body"><h3>'+esc(s.name)+'</h3><p>'+esc(s.obtain||"入手方法はゲーム内で確認してください")+'</p></div></article>').join("")+'</div>';}
+function skinHtmlFor(b){const rows=skins.filter(s=>s.brawler===b.name);if(!rows.length)return '<div class="skin-empty">このキャラクターのスキン情報はまだ見つかりません。</div>';return '<div class="skin-grid">'+rows.map(s=>'<article class="skin-card">'+(s.image?'<img loading="lazy" src="'+esc(s.image)+'" data-fallback="'+esc((s.fallback||[]).join("|"))+'" onerror="skinImageFallback(this)" alt="'+esc(s.name)+'">':'<div class="skin-placeholder">🎨</div>')+'<div class="body"><h3>'+esc(s.name)+'</h3><p>'+esc(s.obtain||"入手方法はゲーム内で確認してください")+'</p></div></article>').join("")+'</div>';}
 function hyperHtmlFor(b){const h=hyperRows.find(x=>x.brawler.toLowerCase()===b.name.toLowerCase());if(!h)return '<div class="skin-empty">ハイパーチャージ情報が登録されていないか、データを取得できていません。</div>';return '<div class="ability"><div>'+(h.skillData?.Name?'<strong>'+esc(h.skillData.Name)+'</strong>':'<strong>ハイパーチャージ対応</strong>')+'<p>'+esc(h.skillData?.Description||"ハイパーチャージ中はキャラクターの能力が強化されます。詳細な効果はゲーム内で確認してください。")+'</p></div></div>';}
 function bestMapsFor(b){const r=role(b);const relevant=maps.filter(m=>!m.disabled&&suggestedRoles(m).includes(r));const unique=[];const seen=new Set();for(const m of relevant){const key=m.gameMode?.name||"";if(!seen.has(key)){seen.add(key);unique.push(m);}}return unique.slice(0,6);}
 function compactSection(title,content,open=false){return '<details class="profile-section" '+(open?'open':'')+'><summary>'+title+'</summary><div class="profile-section-body">'+content+'</div></details>';}
@@ -133,6 +133,13 @@ function renderSkins(){
  const rows=skins.filter(x=>(!r||x.kind===r)&&(x.name+" "+x.brawler+" "+x.obtain).toLocaleLowerCase().normalize("NFKC").includes(q));
  $("skinList").innerHTML=rows.map(x=>'<article class="skin-card">'+(x.image?'<img loading="lazy" src="'+esc(x.image)+'" data-fallback="'+esc((x.fallback||[]).join("|"))+'" onerror="skinImageFallback(this)" alt="'+esc(x.name)+'">':'<div class="skin-placeholder">🎨</div>')+'<div class="body"><div class="rarity">'+esc(x.kind||"スキン")+'</div><h3>'+esc(x.name)+'</h3><p>'+esc(x.brawler)+'</p><p>'+esc(x.obtain||"入手方法はゲーム内で確認してください")+'</p></div></article>').join("")||'<div class="skin-empty">'+(skins.length?'該当するスキンがありません。':'スキンデータを読み込んでいます…')+'</div>';
 }
+function skinImageFallback(img){
+ const list=(img.dataset.fallback||"").split("|").filter(Boolean);
+ const tried=Number(img.dataset.fallbackIndex||0);
+ if(tried>=list.length){img.onerror=null;img.style.display="none";const note=document.createElement("div");note.className="skin-placeholder";note.textContent="🎨";img.parentElement.insertBefore(note,img);return;}
+ img.dataset.fallbackIndex=String(tried+1);
+ img.src=list[tried];
+}
 async function loadSkins(){
  try{
   const [skinData,confData,charData,textData]=await Promise.all([
@@ -142,32 +149,33 @@ async function loadSkins(){
    getJson("/game/localization/texts")
   ]);
   const confs=confData||{}, chars=charData||{}, texts=textData||{};
+  const brawlerByKey=new Map();
+  brawlers.forEach(b=>[b.hash,b.path,b.fankit,b.name].filter(Boolean).forEach(k=>brawlerByKey.set(String(k).toLowerCase(),b)));
   skins=Object.entries(skinData||{}).map(([key,x])=>{
    if(!x)return null;
    const name=x.Name||key;
    const conf=confs[String(x.Conf||"")]||{};
-   const ownerKey=String(conf.Character||x.Character||x.Brawler||x.CharacterName||x.BrawlerName||"");
-   const ownerKeys=ownerKey.split(/[;,]/).map(v=>v.trim()).filter(Boolean);
-   // Bot-only entries are game data, not playable character skins.
-   if(ownerKeys.some(v=>/bot/i.test(v)))return null;
-   const matched=brawlers.find(v=>ownerKeys.some(k=>[v.hash,v.path,v.fankit].some(z=>z&&String(z).toLowerCase()===k.toLowerCase())));
-   const charRow=ownerKeys.map(k=>chars[k]).find(Boolean)||{};
+   const ownerKey=String(conf.Character||"");
+   const charRow=chars[ownerKey]||{};
+   const itemName=String(charRow.ItemName||"").toLowerCase();
+   const matched=brawlerByKey.get(itemName)||brawlerByKey.get(ownerKey.toLowerCase());
+   if(!matched)return null;
    const tid=charRow.TID||charRow.NameTID||"";
    const localized=texts[tid]?.EN||texts[tid]?.en||"";
-   const ownerName=matched?.name||localized||ownerKeys[0]||"キャラクター情報なし";
+   const ownerName=matched.name||localized||"キャラクター情報なし";
    const id=Number(x.id||x.Id||(/^290\d+$/.test(key)?key:null));
-   const image=id?"https://cdn.bsinfox.com/brawlers/skins/"+id+".png":"";
-   const fallback=id?[
+   if(!Number.isFinite(id)||id<=0)return null;
+   const image="https://cdn.bsinfox.com/brawlers/skins/"+id+".png";
+   const fallback=[
     "https://cdn.bsinfox.com/brawlers/skins/"+id+".webp",
-    "https://cdn.brawltools.net/brawlers/skins/"+id+".png",
-    "https://cdn.brawltools.net/brawlers/skins/"+id+".webp",
-    "https://cdn.brawlify.com/brawlers/skins/"+id+".png"
-   ]:[];
+    "https://cdn.brawltools.net/skins/"+id+".png",
+    "https://cdn.brawltools.net/skins/"+id+".webp"
+   ];
    const cost=x.CostGems?x.CostGems+"エメラルド":x.CostCoins?x.CostCoins+"コイン":"";
-   return {id,name,brawler:ownerName,ownerKey,ownerKeys,kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image,fallback};
+   return {id,name,brawler:ownerName,ownerKey,ownerKeys:[ownerKey],kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image,fallback};
   }).filter(x=>x&&x.name&&!/Default|Base/i.test(x.name));
   renderSkins();
-  console.info("Skin data loaded:",skins.length);
+  console.info("Playable skin data loaded:",skins.length);
  }catch(e){
   console.error("Skin data error:",e);
   skins=[];
@@ -207,6 +215,6 @@ async function loadData(){
   }
   loadHyper();
 }
-["search","classFilter","rarityFilter"].forEach(id=>$(id).addEventListener("input",renderRoster));["modeFilter","mapSearch"].forEach(id=>$(id).addEventListener("input",renderMaps));$("buildBrawler").addEventListener("change",renderBuild);["skinSearch","skinRarity"].forEach(id=>$(id).addEventListener("input",renderSkins));["hyperSearch"].forEach(id=>$(id).addEventListener("input",renderHyper));$("rankMode").addEventListener("change",renderRankings);$("rankSearch").addEventListener("input",renderRankings);$("progressRole").addEventListener("change",renderProgress);$("draftGo").addEventListener("click",renderDraft);$("rankMode").innerHTML='<option value="">ゲームモードを選択</option>'+Object.keys(modeRoles).map(m=>'<option value="'+esc(m)+'">'+esc(modeName(m))+'</option>').join("");$("draftMode").innerHTML='<option value="">ゲームモード</option>'+Object.keys(modeRoles).map(m=>'<option value="'+esc(m)+'">'+esc(modeName(m))+'</option>').join("");renderSkins();renderProgress();renderRankings();loadSkins();loadData();
+["search","classFilter","rarityFilter"].forEach(id=>$(id).addEventListener("input",renderRoster));["modeFilter","mapSearch"].forEach(id=>$(id).addEventListener("input",renderMaps));$("buildBrawler").addEventListener("change",renderBuild);["skinSearch","skinRarity"].forEach(id=>$(id).addEventListener("input",renderSkins));["hyperSearch"].forEach(id=>$(id).addEventListener("input",renderHyper));$("rankMode").addEventListener("change",renderRankings);$("rankSearch").addEventListener("input",renderRankings);$("progressRole").addEventListener("change",renderProgress);$("draftGo").addEventListener("click",renderDraft);$("rankMode").innerHTML='<option value="">ゲームモードを選択</option>'+Object.keys(modeRoles).map(m=>'<option value="'+esc(m)+'">'+esc(modeName(m))+'</option>').join("");$("draftMode").innerHTML='<option value="">ゲームモード</option>'+Object.keys(modeRoles).map(m=>'<option value="'+esc(m)+'">'+esc(modeName(m))+'</option>').join("");renderSkins();renderProgress();renderRankings();loadData().finally(()=>loadSkins());
 </script>
 </body></html>
