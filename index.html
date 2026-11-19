@@ -111,25 +111,55 @@ function renderHyper(){
  $("hyperList").innerHTML=rows.map(x=>'<article class="hyper-card">'+(x.hyperImage?'<img class="hyper-art" loading="lazy" src="'+esc(x.hyperImage)+'" alt="">':'')+'<div class="hyper-info">'+(x.image?'<img class="hyper-brawler" loading="lazy" src="'+esc(x.image)+'" alt="">':'')+'<div><strong>'+esc(x.brawler)+'</strong><small>'+esc(x.skillData?.Name||"ハイパーチャージ")+'</small></div></div><p>'+esc(x.skillData?.Description||"能力の詳細説明はゲーム内で確認してください。")+'</p><button class="btn" type="button" data-hyper-name="'+esc(x.brawler)+'">キャラクター詳細</button></article>').join("")||'<div class="skin-empty">'+(hyperRows.length?'検索結果がありません。':'ハイパーチャージ情報を取得できていません。')+'</div>';
  document.querySelectorAll("[data-hyper-name]").forEach(el=>el.addEventListener("click",()=>{const b=brawlers.find(v=>v.name.toLocaleLowerCase()===el.dataset.hyperName.toLocaleLowerCase());if(b){showBrawler(b);$("characters").scrollIntoView({behavior:"smooth"});}}));
 }
+function hyperTextLookup(texts,value){
+ const key=String(value||"").trim();
+ if(!key)return "";
+ const direct=texts?.[key];
+ if(direct?.EN)return direct.EN;
+ if(direct?.en)return direct.en;
+ const row=Object.values(texts||{}).find(x=>String(x?.TID||"")===key);
+ return row?.EN||row?.en||"";
+}
 async function loadHyper(){
  try{
-  const [chars,skills]=await Promise.all([getJson("/game/csv_logic/characters"),getJson("/game/csv_logic/skills")]);
+  const [chars,skills,texts]=await Promise.all([
+   getJson("/game/csv_logic/characters"),
+   getJson("/game/csv_logic/skills"),
+   getJson("/game/localization/texts")
+  ]);
+  const norm=v=>String(v||"").toLowerCase().normalize("NFKC").replace(/[^a-z0-9]/g,"");
+  const textRows=Object.values(texts||{});
+  const textFor=value=>hyperTextLookup(texts,value);
+  const brawlerAliases=new Map();
+  brawlers.forEach(b=>[b.name,b.hash,b.path,b.fankit].filter(Boolean).forEach(v=>brawlerAliases.set(norm(v),b)));
+  const charRows=Object.entries(chars||{});
+  const resolved=charRows.map(([key,c])=>{
+   const localized=textFor(c?.TID);
+   const brawler=brawlerAliases.get(norm(key))||brawlerAliases.get(norm(c?.ItemName))||brawlerAliases.get(norm(localized));
+   return {key,c,brawler,localized};
+  }).filter(x=>x.c?.OverchargedUltimateSkill&&x.brawler);
   const skillRows=Object.entries(skills||{});
-  const brawlerByKey=new Map();
-  brawlers.forEach(b=>[b.hash,b.path,b.fankit,b.name].filter(Boolean).forEach(k=>brawlerByKey.set(String(k).toLowerCase(),b)));
-  hyperRows=Object.entries(chars||{}).map(([key,c])=>{
-   if(!c?.OverchargedUltimateSkill)return null;
-   const itemName=String(c.ItemName||"").toLowerCase();
-   const brawler=brawlerByKey.get(itemName)||brawlerByKey.get(String(key).toLowerCase());
-   if(!brawler)return null;
+  hyperRows=resolved.map(({key,c,brawler})=>{
    const skillKey=String(c.OverchargedUltimateSkill);
-   const found=skills?.[skillKey]||skillRows.find(([name,row])=>name===skillKey||String(row?.id)===skillKey)?.[1]||null;
-   return {brawler:brawler.name,image:brawler.imageUrl2,skill:skillKey,skillData:found,hyperImage:found?.id?"https://cdn.brawltools.net/hypercharges/"+found.id+".png":""};
+   const skill=skills?.[skillKey]||skillRows.find(([name,row])=>norm(name)===norm(skillKey)||String(row?.id||"")===skillKey)?.[1]||null;
+   if(!skill)return null;
+   const title=textFor(skill.TID)||skill.Name||"ハイパーチャージ";
+   const desc=textFor(skill.Desc)||textFor(skill.DescriptionTID)||skill.Desc||skill.Description||"";
+   const overchargeSkill=skill.OverchargedVersion?skills?.[String(skill.OverchargedVersion)]:null;
+   const overchargeDesc=overchargeSkill?(textFor(overchargeSkill.Desc)||textFor(overchargeSkill.TID)||""):"";
+   const effect=desc||overchargeDesc||"効果の説明はゲームデータに登録されていません。";
+   return {brawler:brawler.name,image:brawler.imageUrl2,skill:skillKey,skillData:{Name:title,Description:effect},hyperImage:""};
   }).filter(Boolean);
+  hyperRows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
   renderHyper();
   if(selected)showBrawler(selected);
-  console.info("Hypercharge rows loaded:",hyperRows.length);
- }catch(e){console.error("Hypercharge data error:",e);$("hyperCount").textContent="データを取得できません";$("hyperList").innerHTML='<div class="skin-empty">ハイパーチャージ情報を読み込めませんでした。</div>';}
+  console.info("Hypercharge mapping diagnostic:",{charactersWithHyper:charRows.filter(([,c])=>c?.OverchargedUltimateSkill).length,matched:hyperRows.length,unmatched:charRows.filter(([,c])=>c?.OverchargedUltimateSkill&&!resolved.some(x=>x.key===c.Name)).map(([k])=>k),examples:hyperRows.slice(0,5)});
+ }catch(e){
+  console.error("Hypercharge data error:",e);
+  hyperRows=[];
+  $("hyperCount").textContent="データを取得できません";
+  $("hyperList").innerHTML='<div class="skin-empty">ハイパーチャージ情報を読み込めませんでした。</div>';
+ }
 }
 function renderDraft(){const m=$("draftMode").value,r=$("draftRole").value,ban=$("draftBan").value.trim().toLowerCase();if(!m){$("draftResult").innerHTML='<div class="skin-empty">先にゲームモードを選んでください。</div>';return;}let rows=brawlers.filter(b=>(!r||role(b)===r)&&!b.name.toLowerCase().includes(ban)).map(b=>({...b,match:modeScore(b,m)+(r&&role(b)===r?12:0)})).sort((a,b)=>b.match-a.match).slice(0,6);$("draftResult").innerHTML=rows.map((b,i)=>'<div class="rec rank-row">'+(b.imageUrl2?'<img src="'+esc(b.imageUrl2)+'" alt="">':'')+'<div><strong>候補 '+(i+1)+'：'+esc(b.name)+'</strong><small>'+esc(role(b))+'｜モード相性の目安 '+b.match+'</small></div></div>').join("")||'<div class="skin-empty">条件に合う候補がありません。</div>';}
 
