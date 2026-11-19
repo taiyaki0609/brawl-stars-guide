@@ -418,58 +418,68 @@ function skinImageFallback(img){
 }
 async function loadSkins(){
  try{
-  const [skinData,confData,charData,textData]=await Promise.all([
+  const [skinRaw,confRaw,charRaw,textRaw]=await Promise.all([
    getJson("/game/csv_logic/skins"),
    getJson("/game/csv_logic/skin_confs"),
    getJson("/game/csv_logic/characters"),
    getJson("/game/localization/texts")
   ]);
-  const norm=v=>String(v||"").toLowerCase().normalize("NFKC").replace(/[^a-z0-9]/g,"");
-  const brawlerByAlias=new Map();
+  // BrawlAPIの形式（従来の裸オブジェクト／metadata付きv2形式／配列）を統一する。
+  const unwrap=raw=>(raw&&raw.metadata&&raw.data!==undefined)?raw.data:(raw&&raw.data&&typeof raw.data==="object"&&!Array.isArray(raw.data)&&Object.keys(raw).length<=3?raw.data:raw);
+  const toEntries=raw=>{
+   const data=unwrap(raw);
+   if(Array.isArray(data))return data.map((row,i)=>[String(row?.Name??row?.name??i),row]);
+   return Object.entries(data||{});
+  };
+  const norm=v=>String(v??"").toLowerCase().normalize("NFKC").replace(/[^a-z0-9]/g,"");
+  const skinEntries=toEntries(skinRaw);
+  const confEntries=toEntries(confRaw);
+  const charEntries=toEntries(charRaw);
+  const textRows=unwrap(textRaw)||{};
+  const textByTid=new Map(toEntries(textRaw).map(([k,row])=>[String(row?.TID??k),row]));
+  const getText=tid=>textByTid.get(String(tid??""))||textRows?.[tid]||{};
+  const brawlerByAlias=new Map(),brawlerById=new Map();
   brawlers.forEach(b=>{
+   if(b.id!==undefined&&b.id!==null)brawlerById.set(String(b.id),b);
    [b.name,b.hash,b.path,b.fankit,b.id].filter(v=>v!==null&&v!==undefined&&v!=="").forEach(v=>brawlerByAlias.set(norm(v),b));
   });
-  const charEntries=Object.entries(charData||{});
-  const texts=textData||{};
-  // SkinConf.Character は characters の行キーとは限らないため、
-  // Name / ItemName / 翻訳名も含めた逆引き辞書を作る。
-  const charByAlias=new Map();
+  const charByAlias=new Map(),charByDefaultSkin=new Map();
   charEntries.forEach(([key,row])=>{
-   const translated=texts[row?.TID]?.EN||texts[row?.TID]?.en||"";
+   const translated=getText(row?.TID)?.EN||getText(row?.TID)?.en||"";
+   const entry={key,row,translated};
    [key,row?.Name,row?.ItemName,translated].filter(Boolean).forEach(alias=>{
-    const k=norm(alias);
-    if(k&&!charByAlias.has(k))charByAlias.set(k,{key,row,translated});
+    const k=norm(alias);if(k&&!charByAlias.has(k))charByAlias.set(k,entry);
    });
+   if(row?.DefaultSkin)charByDefaultSkin.set(norm(row.DefaultSkin),entry);
   });
-  const confByKey=new Map(Object.entries(confData||{}).map(([key,row])=>[norm(key),{key,row}]));
+  const confByKey=new Map(confEntries.map(([key,row])=>[norm(key||row?.Name),{key,row}]));
   const ownerForConf=(conf,confKey="")=>{
    const characterKey=String(conf?.Character||"");
-   const charEntry=charByAlias.get(norm(characterKey));
+   let charEntry=charByAlias.get(norm(characterKey));
+   if(!charEntry&&confKey)charEntry=charByDefaultSkin.get(norm(confKey));
    const row=charEntry?.row;
-   const translated=charEntry?.translated||(row?(texts[row.TID]?.EN||texts[row.TID]?.en||""):"");
-   const candidates=[
-    characterKey,
-    charEntry?.key,
-    row?.Name,
-    row?.ItemName,
-    translated,
-    conf?.Name,
-    confKey
-   ].filter(Boolean);
+   // characters.csv と brawlers API は同じ合成IDを持つため、IDでの照合を最優先する。
+   const byId=row?.id!==undefined?brawlerById.get(String(row.id)):null;
+   if(byId)return {brawler:byId,characterKey:charEntry.key||characterKey};
+   const candidates=[characterKey,charEntry?.key,row?.Name,row?.ItemName,charEntry?.translated,conf?.Name,confKey];
    for(const candidate of candidates){
     const direct=brawlerByAlias.get(norm(candidate));
-    if(direct)return {brawler:direct,characterKey:characterKey||candidate};
+    if(direct)return {brawler:direct,characterKey:characterKey||charEntry?.key||candidate};
    }
    return null;
   };
-  const allRows=Object.entries(skinData||{});
-  let matchedCount=0,unmatchedCount=0,missingIdCount=0;const unmatchedNames=[];
-  skins=allRows.map(([key,x])=>{
+  let matchedCount=0,unmatchedCount=0,missingIdCount=0;
+  const unmatchedNames=[];
+  skins=skinEntries.map(([key,x])=>{
    if(!x)return null;
-   const confKey=String(x.Conf||"");
-   const conf=confByKey.get(norm(confKey));
+   const confKey=String(x.Conf||x.SkinConf||"");
+   const conf=confByKey.get(norm(confKey))?.row;
    const owner=ownerForConf(conf,confKey);
-   if(!owner){unmatchedCount++;unmatchedNames.push(key+" (Conf: "+confKey+" / Character: "+String(conf?.Character||"未取得")+" / Conf行: "+String(conf?.Name||"未取得")+")");return null;}
+   if(!owner){
+    unmatchedCount++;
+    if(unmatchedNames.length<200)unmatchedNames.push(key+" (Conf: "+confKey+" / Character: "+String(conf?.Character||"未取得")+" / Conf行: "+String(conf?.Name||"未取得")+")");
+    return null;
+   }
    const id=Number(x.id||x.Id||(/^290[0-9]+$/.test(key)?key:null));
    if(!Number.isFinite(id)||id<=0){missingIdCount++;return null;}
    matchedCount++;
@@ -479,15 +489,17 @@ async function loadSkins(){
    const cost=x.CostGems?x.CostGems+"エメラルド":x.CostCoins?x.CostCoins+"コイン":"";
    return {id,name,brawler:owner.brawler.name,ownerKey:owner.characterKey,kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image,fallback};
   }).filter(x=>x&&x.name&&!/Default|Base/i.test(x.name));
-  skinAudit={unmatched:unmatchedNames,total:allRows.length,matched:matchedCount};
-  renderSkins();
-  renderSkinAudit();
+  skinAudit={unmatched:unmatchedNames,total:skinEntries.length,matched:matchedCount};
+  renderSkins();renderSkinAudit();
   if(selected)showBrawler(selected);
-  console.info("Skin mapping diagnostic:",{total:allRows.length,matched:matchedCount,unmatched:unmatchedCount,missingId:missingIdCount,displayed:skins.length,zeroSkinBrawlers:brawlers.filter(b=>!skins.some(s=>s.brawler===b.name)).map(b=>b.name),sampleUnmatched:unmatchedNames.slice(0,30),skinConfRows:Object.keys(confData||{}).length,characterRows:charEntries.length});
+  console.info("Skin mapping diagnostic:",{
+   total:skinEntries.length,matched:matchedCount,unmatched:unmatchedCount,missingId:missingIdCount,displayed:skins.length,
+   zeroSkinBrawlers:brawlers.filter(b=>!skins.some(s=>s.brawler===b.name)).map(b=>b.name),
+   sampleUnmatched:unmatchedNames.slice(0,30),skinConfRows:confEntries.length,characterRows:charEntries.length,
+   responseShapes:{skins:Array.isArray(unwrap(skinRaw))?"array":typeof unwrap(skinRaw),skinConfs:Array.isArray(unwrap(confRaw))?"array":typeof unwrap(confRaw),characters:Array.isArray(unwrap(charRaw))?"array":typeof unwrap(charRaw)}
+  });
  }catch(e){
-  console.error("Skin data error:",e);
-  skins=[];
-  renderSkinAudit();
+  console.error("Skin data error:",e);skins=[];renderSkinAudit();
   $("skinList").innerHTML='<div class="skin-empty">スキンデータを取得できませんでした。</div>';
  }
 }
