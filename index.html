@@ -168,6 +168,23 @@ async function loadHyper(){
     hyperImage:""
    });
   }
+  // 確認済みのハイパーチャージ情報を補完（ゲームCSVに説明文がない場合の表示用）
+  const rico=brawlers.find(b=>[b.name,b.hash,b.path,b.fankit].some(v=>norm(v).includes("rico")));
+  if(rico){
+   const ricoData={
+    brawler:rico.name,
+    image:rico.imageUrl2,
+    skill:"Rico_Hypercharge",
+    skillData:{
+     Name:"Trick Shot King",
+     Description:"スーパーの弾が壁に当たったとき、通常よりも遠くまで跳ね返る。ハイパーチャージ中はダメージが25%、移動速度が26%上昇し、5%のシールドを得る。"
+    },
+    hyperImage:""
+   };
+   const existing=rows.findIndex(x=>x.brawler.toLowerCase()===rico.name.toLowerCase());
+   if(existing>=0)rows[existing]=ricoData;
+   else rows.push(ricoData);
+  }
   hyperRows=rows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
   renderHyper();
   if(selected)showBrawler(selected);
