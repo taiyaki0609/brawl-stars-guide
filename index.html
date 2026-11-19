@@ -469,7 +469,7 @@ async function loadSkins(){
    const confKey=String(x.Conf||"");
    const conf=confByKey.get(norm(confKey));
    const owner=ownerForConf(conf,confKey);
-   if(!owner){unmatchedCount++;unmatchedNames.push(key+" (Conf: "+confKey+")");return null;}
+   if(!owner){unmatchedCount++;unmatchedNames.push(key+" (Conf: "+confKey+" / Character: "+String(conf?.Character||"未取得")+" / Conf行: "+String(conf?.Name||"未取得")+")");return null;}
    const id=Number(x.id||x.Id||(/^290[0-9]+$/.test(key)?key:null));
    if(!Number.isFinite(id)||id<=0){missingIdCount++;return null;}
    matchedCount++;
