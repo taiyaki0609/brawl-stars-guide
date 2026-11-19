@@ -133,87 +133,87 @@ async function loadHyper(){
   const textFor=value=>{
    if(value===null||value===undefined||value==="")return "";
    const key=String(value).trim();
-   const row=texts?.[key]||textRows.find(x=>String(x?.TID||"")===key);
-   if(typeof row==="string")return row;
-   return row?.EN||row?.JP||row?.JA||row?.en||"";
+   const direct=texts?.[key];
+   if(typeof direct==="string")return direct;
+   if(direct?.EN||direct?.en||direct?.JP||direct?.JA)return direct.EN||direct.en||direct.JP||direct.JA;
+   const row=textRows.find(x=>String(x?.TID||"")===key);
+   return row?.EN||row?.en||row?.JP||row?.JA||"";
   };
   const findSkill=value=>{
    const key=String(value||"").trim();
    if(!key)return null;
-   return skills?.[key]||skillRows.find(([name,row])=>norm(name)===norm(key)||String(row?.id??"")===key)?.[1]||null;
+   if(skills?.[key])return skills[key];
+   return skillRows.find(([name,row])=>
+    norm(name)===norm(key)||
+    String(row?.id??row?.Id??"")===key
+   )?.[1]||null;
   };
-  const brawlerAliases=new Map();
-  brawlers.forEach(b=>[b.name,b.hash,b.path,b.fankit].filter(Boolean).forEach(v=>brawlerAliases.set(norm(v),b)));
-  const characterRows=Object.entries(chars||{});
+  const brawlerByAlias=new Map();
+  brawlers.forEach(b=>{
+   [b.name,b.hash,b.path,b.fankit,b.id].filter(v=>v!==null&&v!==undefined).forEach(v=>brawlerByAlias.set(norm(v),b));
+  });
   const rows=[];
   const unresolved=[];
-  for(const [key,ch] of characterRows){
+  for(const [key,ch] of Object.entries(chars||{})){
    const hyperKey=ch?.OverchargedUltimateSkill;
    if(!hyperKey)continue;
+   const translated=textFor(ch?.TID);
+   const brawler=
+    brawlerByAlias.get(norm(ch?.ItemName))||
+    brawlerByAlias.get(norm(ch?.Name))||
+    brawlerByAlias.get(norm(translated))||
+    brawlerByAlias.get(norm(key));
+   if(!brawler){
+    unresolved.push({character:key,hyperSkill:String(hyperKey),reason:"キャラクター名を照合できない"});
+    continue;
+   }
    const base=findSkill(hyperKey);
-   if(!base){unresolved.push({character:key,hyperSkill:String(hyperKey),reason:"skill row not found"});continue;}
-   const upgraded=findSkill(base.OverchargedVersion);
-   const brawler=brawlerAliases.get(norm(key))||brawlerAliases.get(norm(ch?.ItemName))||brawlerAliases.get(norm(textFor(ch?.TID)));
-   if(!brawler){unresolved.push({character:key,hyperSkill:String(hyperKey),reason:"brawler mapping not found"});continue;}
-   const name=textFor(base.TID)||textFor(upgraded?.TID)||base.Name||String(hyperKey);
-   const desc=textFor(base.Desc)||String(base.Desc||"")||textFor(upgraded?.Desc)||String(upgraded?.Desc||"");
+   const upgraded=findSkill(base?.OverchargedVersion);
+   const name=
+    textFor(base?.TID)||
+    textFor(upgraded?.TID)||
+    base?.Name||
+    ch?.HyperchargeName||
+    "ハイパーチャージ";
+   const desc=
+    textFor(base?.Desc)||
+    textFor(upgraded?.Desc)||
+    (typeof base?.Desc==="string"&&base.Desc.length>12&&!/^TID_/i.test(base.Desc)?base.Desc:"")||
+    (typeof upgraded?.Desc==="string"&&upgraded.Desc.length>12&&!/^TID_/i.test(upgraded.Desc)?upgraded.Desc:"");
    rows.push({
     brawler:brawler.name,
     image:brawler.imageUrl2,
     skill:String(hyperKey),
     skillData:{
      Name:name,
-     Description:desc||"このハイパーチャージの効果説明は、現在のゲームデータから取得できませんでした。"
+     Description:desc||"このキャラクターのハイパーチャージに対応しています。個別のスーパー強化効果はゲーム内のハイパーチャージ説明で確認してください。"
     },
     hyperImage:""
    });
   }
-  // 確認済みの専用データで、ゲームCSVに説明がないキャラクターを補完
   const manualHyperData={
-   rico:{
-    Name:"Trick Shot King",
-    Description:"スーパーの弾がさらに遠くまで跳ね返る。ハイパーチャージ中はダメージが5%、移動速度が20%上昇し、5%のシールドを得る。"
-   },
-   cosmo:{
-    Name:"Cosmic Capture",
-    Description:"ハイパー状態の弾が相手を追尾し、命中すると2秒間その場に拘束する。"
-   },
-   vince:{
-    Name:"Bug Swarm",
-    Description:"スーパーが常に最大パワーになり、周囲にハイパーチャージ状態のイモムシを放つ。"
-   },
-   ruby:{
-    Name:"All In!",
-    Description:"スーパーの範囲が大きくなり、弾が当たった相手を追加の弾で爆発させる。"
-   },
-   mandy:{
-    Name:"Sugar For All!",
-    Description:"スーパーを3方向に発射する。"
-   }
+   rico:{Name:"Trick Shot King",Description:"スーパーの弾がさらに遠くまで跳ね返る。"},
+   cosmo:{Name:"Cosmic Capture",Description:"ハイパー状態の弾が相手を追尾し、命中すると2秒間その場に拘束する。"},
+   vince:{Name:"Bug Swarm",Description:"スーパーが常に最大パワーになり、周囲にハイパーチャージ状態のイモムシを放つ。"},
+   ruby:{Name:"All In!",Description:"スーパーの範囲が大きくなり、命中した相手に追加の弾を発生させる。"},
+   mandy:{Name:"Sugar For All!",Description:"スーパーを3方向に発射する。"}
   };
   for(const [alias,data] of Object.entries(manualHyperData)){
    const brawler=brawlers.find(b=>[b.name,b.hash,b.path,b.fankit].some(v=>norm(v)===alias));
    if(!brawler)continue;
-   const item={
-    brawler:brawler.name,
-    image:brawler.imageUrl2,
-    skill:"manual_"+alias,
-    skillData:{Name:data.Name,Description:data.Description},
-    hyperImage:""
-   };
+   const item={brawler:brawler.name,image:brawler.imageUrl2,skill:"manual_"+alias,skillData:{Name:data.Name,Description:data.Description},hyperImage:""};
    const existing=rows.findIndex(x=>x.brawler.toLowerCase()===brawler.name.toLowerCase());
-   if(existing>=0)rows[existing]=item;
-   else rows.push(item);
+   if(existing>=0)rows[existing]=item;else rows.push(item);
   }
   hyperRows=rows.sort((a,b)=>a.brawler.localeCompare(b.brawler));
   renderHyper();
   if(selected)showBrawler(selected);
   console.info("Hypercharge data audit:",{
-   gameCharacters:characterRows.length,
-   charactersWithHyper:characterRows.filter(([,x])=>!!x?.OverchargedUltimateSkill).length,
+   gameCharacters:Object.keys(chars||{}).length,
+   charactersWithHyper:Object.values(chars||{}).filter(x=>!!x?.OverchargedUltimateSkill).length,
    displayed:hyperRows.length,
-   unresolved:unresolved.slice(0,100),
-   sample:skillRows.slice(0,3)
+   unresolved:unresolved,
+   missingSkillRows:Object.entries(chars||{}).filter(([,x])=>x?.OverchargedUltimateSkill&&!findSkill(x.OverchargedUltimateSkill)).map(([k])=>k)
   });
  }catch(e){
   console.error("Hypercharge data error:",e);
