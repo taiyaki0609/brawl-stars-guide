@@ -156,6 +156,14 @@ async function loadHyper(){
   const unresolved=[];
   const missingSkills=[];
   const missingDescriptions=[];
+  const knownHyperOwners={
+   JesterOverchargedUlti:"Chester",
+   TwinsHyperUlti:"Larry & Lawrie",
+   MechaDudeBigOverchargedUlti:"Meg",
+   DancerOverchargedUlti:"Mina",
+   SkaterOverchargedUlti:"Ollie",
+   DomainOverchargedUlti:"Trunk"
+  };
   for(const [key,ch] of Object.entries(chars||{})){
    const hyperKey=ch?.OverchargedUltimateSkill;
    if(!hyperKey)continue;
@@ -164,7 +172,8 @@ async function loadHyper(){
     brawlerByAlias.get(norm(ch?.ItemName))||
     brawlerByAlias.get(norm(ch?.Name))||
     brawlerByAlias.get(norm(translated))||
-    brawlerByAlias.get(norm(key));
+    brawlerByAlias.get(norm(key))||
+    (knownHyperOwners[String(hyperKey||"")]?brawlers.find(b=>norm(b.name)===norm(knownHyperOwners[String(hyperKey||"")])):null);
    if(!brawler){
     unresolved.push({character:key,hyperSkill:String(hyperKey),reason:"キャラクター名を照合できない"});
     continue;
