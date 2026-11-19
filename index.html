@@ -131,20 +131,29 @@ function renderSkins(){
 }
 async function loadSkins(){
  try{
-  const [skinData,charData]=await Promise.all([getJson("/game/csv_logic/skins"),getJson("/game/csv_logic/characters")]);
-  const owner=new Map();
-  Object.entries(charData||{}).forEach(([key,c])=>(Array.isArray(c.Skins)?c.Skins:[]).forEach(v=>owner.set(String(v),c.Name||key)));
+  const [skinData,confData]=await Promise.all([
+   getJson("/game/csv_logic/skins"),
+   getJson("/game/csv_logic/skin_confs")
+  ]);
+  const confs=confData||{};
   skins=Object.entries(skinData||{}).map(([key,x])=>{
    if(!x)return null;
    const name=x.Name||key;
-   const ownerName=owner.get(key)||owner.get(name)||x.Character||x.Brawler||x.CharacterName||x.BrawlerName||"キャラクター情報なし";
+   const confKey=String(x.Conf||"");
+   const conf=confs[confKey]||{};
+   const ownerName=conf.Character||x.Character||x.Brawler||x.CharacterName||x.BrawlerName||"キャラクター情報なし";
    const id=x.id||x.Id||(/^\d+$/.test(key)?key:null);
-   const image=id?"https://cdn.bsinfox.com/brawlers/skins/"+id+".webp":"";
+   const image=x.imageUrl||x.ImageUrl||x.image||x.Image||(id?"https://cdn.brawlify.com/brawlers/skins/"+id+".png":"");
    const cost=x.CostGems?x.CostGems+"エメラルド":x.CostCoins?x.CostCoins+"コイン":"";
    return {id,name,brawler:ownerName,kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image};
   }).filter(x=>x&&x.name&&!/Default|Base/i.test(x.name));
   renderSkins();
- }catch(e){console.error("Skin data error:",e);skins=[];$("skinList").innerHTML='<div class="skin-empty">スキンデータを取得できませんでした。</div>';}
+  console.info("Skin data loaded:",skins.length);
+ }catch(e){
+  console.error("Skin data error:",e);
+  skins=[];
+  $("skinList").innerHTML='<div class="skin-empty">スキンデータを取得できませんでした。</div>';
+ }
 }
 async function loadData(){
   $("loadState").textContent="キャラクター情報を読み込み中…";
