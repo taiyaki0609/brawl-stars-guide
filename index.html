@@ -115,14 +115,20 @@ async function loadHyper(){
  try{
   const [chars,skills]=await Promise.all([getJson("/game/csv_logic/characters"),getJson("/game/csv_logic/skills")]);
   const skillRows=Object.entries(skills||{});
-  hyperRows=Object.entries(chars||{}).filter(([key,c])=>c&&c.OverchargedUltimateSkill).map(([key,c])=>{
+  const brawlerByKey=new Map();
+  brawlers.forEach(b=>[b.hash,b.path,b.fankit,b.name].filter(Boolean).forEach(k=>brawlerByKey.set(String(k).toLowerCase(),b)));
+  hyperRows=Object.entries(chars||{}).map(([key,c])=>{
+   if(!c?.OverchargedUltimateSkill)return null;
+   const itemName=String(c.ItemName||"").toLowerCase();
+   const brawler=brawlerByKey.get(itemName)||brawlerByKey.get(String(key).toLowerCase());
+   if(!brawler)return null;
    const skillKey=String(c.OverchargedUltimateSkill);
-   const found=skills?.[skillKey]||skillRows.map(x=>x[1]).find(x=>String(x.id)===skillKey);
-   const brawler=c.Name||key;
-   const skillId=found?.id||(/^\d+$/.test(skillKey)?skillKey:null);
-   return {brawler,image:(brawlers.find(b=>b.name.toLowerCase()===String(brawler).toLowerCase())||{}).imageUrl2,skill:skillKey,skillData:found,hyperImage:skillId?"https://cdn.brawltools.net/hypercharges/"+skillId+".png":""};
-  });
+   const found=skills?.[skillKey]||skillRows.find(([name,row])=>name===skillKey||String(row?.id)===skillKey)?.[1]||null;
+   return {brawler:brawler.name,image:brawler.imageUrl2,skill:skillKey,skillData:found,hyperImage:found?.id?"https://cdn.brawltools.net/hypercharges/"+found.id+".png":""};
+  }).filter(Boolean);
   renderHyper();
+  if(selected)showBrawler(selected);
+  console.info("Hypercharge rows loaded:",hyperRows.length);
  }catch(e){console.error("Hypercharge data error:",e);$("hyperCount").textContent="データを取得できません";$("hyperList").innerHTML='<div class="skin-empty">ハイパーチャージ情報を読み込めませんでした。</div>';}
 }
 function renderDraft(){const m=$("draftMode").value,r=$("draftRole").value,ban=$("draftBan").value.trim().toLowerCase();if(!m){$("draftResult").innerHTML='<div class="skin-empty">先にゲームモードを選んでください。</div>';return;}let rows=brawlers.filter(b=>(!r||role(b)===r)&&!b.name.toLowerCase().includes(ban)).map(b=>({...b,match:modeScore(b,m)+(r&&role(b)===r?12:0)})).sort((a,b)=>b.match-a.match).slice(0,6);$("draftResult").innerHTML=rows.map((b,i)=>'<div class="rec rank-row">'+(b.imageUrl2?'<img src="'+esc(b.imageUrl2)+'" alt="">':'')+'<div><strong>候補 '+(i+1)+'：'+esc(b.name)+'</strong><small>'+esc(role(b))+'｜モード相性の目安 '+b.match+'</small></div></div>').join("")||'<div class="skin-empty">条件に合う候補がありません。</div>';}
@@ -148,33 +154,40 @@ async function loadSkins(){
    getJson("/game/csv_logic/characters"),
    getJson("/game/localization/texts")
   ]);
-  const confs=confData||{}, chars=charData||{}, texts=textData||{};
+  const confRows=Object.entries(confData||{});
+  const confById=new Map();
+  confRows.forEach(([key,row])=>{
+   if(row?.id!==undefined)confById.set(String(row.id),row);
+   confById.set(String(key),row);
+  });
+  const charRows=Object.entries(charData||{});
   const brawlerByKey=new Map();
-  brawlers.forEach(b=>[b.hash,b.path,b.fankit,b.name].filter(Boolean).forEach(k=>brawlerByKey.set(String(k).toLowerCase(),b)));
+  brawlers.forEach(b=>{
+   [b.hash,b.path,b.fankit,b.name].filter(Boolean).forEach(k=>brawlerByKey.set(String(k).toLowerCase(),b));
+  });
+  const playableChars=charRows.map(([key,row])=>{
+   const item=String(row?.ItemName||"").toLowerCase();
+   const b=brawlerByKey.get(item)||brawlerByKey.get(String(key).toLowerCase());
+   return {key,row,b};
+  }).filter(x=>x.b);
   skins=Object.entries(skinData||{}).map(([key,x])=>{
    if(!x)return null;
-   const name=x.Name||key;
-   const conf=confs[String(x.Conf||"")]||{};
-   const ownerKey=String(conf.Character||"");
-   const charRow=chars[ownerKey]||{};
-   const itemName=String(charRow.ItemName||"").toLowerCase();
-   const matched=brawlerByKey.get(itemName)||brawlerByKey.get(ownerKey.toLowerCase());
-   if(!matched)return null;
-   const tid=charRow.TID||charRow.NameTID||"";
-   const localized=texts[tid]?.EN||texts[tid]?.en||"";
-   const ownerName=matched.name||localized||"キャラクター情報なし";
-   const id=Number(x.id||x.Id||(/^290\d+$/.test(key)?key:null));
+   const confKey=String(x.Conf??x.SkinConf??"");
+   const conf=confById.get(confKey)||confRows.find(([k,row])=>String(row?.Name||"")===confKey)?.[1]||{};
+   const owner=String(conf.Character||x.Character||x.Brawler||"");
+   const ownerLower=owner.toLowerCase();
+   const char=playableChars.find(v=>v.key.toLowerCase()===ownerLower||String(v.row.ItemName||"").toLowerCase()===ownerLower);
+   if(!char)return null;
+   const id=Number(x.id||x.Id||(/^290\\d+$/.test(key)?key:null));
    if(!Number.isFinite(id)||id<=0)return null;
+   const name=x.Name||key;
    const image="https://cdn.bsinfox.com/brawlers/skins/"+id+".png";
-   const fallback=[
-    "https://cdn.bsinfox.com/brawlers/skins/"+id+".webp",
-    "https://cdn.brawltools.net/skins/"+id+".png",
-    "https://cdn.brawltools.net/skins/"+id+".webp"
-   ];
+   const fallback=["https://cdn.bsinfox.com/brawlers/skins/"+id+".webp"];
    const cost=x.CostGems?x.CostGems+"エメラルド":x.CostCoins?x.CostCoins+"コイン":"";
-   return {id,name,brawler:ownerName,ownerKey,ownerKeys:[ownerKey],kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image,fallback};
+   return {id,name,brawler:char.b.name,ownerKey:owner,ownerKeys:[owner],kind:x.Rarity||x.SkinRarity||"スキン",obtain:cost||x.ObtainTypeCN||x.ObtainType||"入手方法はゲーム内で確認",image,fallback};
   }).filter(x=>x&&x.name&&!/Default|Base/i.test(x.name));
   renderSkins();
+  if(selected)showBrawler(selected);
   console.info("Playable skin data loaded:",skins.length);
  }catch(e){
   console.error("Skin data error:",e);
