@@ -496,7 +496,12 @@ async function loadSkins(){
    total:skinEntries.length,matched:matchedCount,unmatched:unmatchedCount,missingId:missingIdCount,displayed:skins.length,
    zeroSkinBrawlers:brawlers.filter(b=>!skins.some(s=>s.brawler===b.name)).map(b=>b.name),
    sampleUnmatched:unmatchedNames.slice(0,30),skinConfRows:confEntries.length,characterRows:charEntries.length,
-   responseShapes:{skins:Array.isArray(unwrap(skinRaw))?"array":typeof unwrap(skinRaw),skinConfs:Array.isArray(unwrap(confRaw))?"array":typeof unwrap(confRaw),characters:Array.isArray(unwrap(charRaw))?"array":typeof unwrap(charRaw)}
+   responseShapes:{skins:Array.isArray(unwrap(skinRaw))?"array":typeof unwrap(skinRaw),skinConfs:Array.isArray(unwrap(confRaw))?"array":typeof unwrap(confRaw),characters:Array.isArray(unwrap(charRaw))?"array":typeof unwrap(charRaw)},
+   skinTopKeys:Object.keys(unwrap(skinRaw)||{}).slice(0,12),
+   confTopKeys:Object.keys(unwrap(confRaw)||{}).slice(0,12),
+   skinSamples:skinEntries.slice(0,5).map(([key,row])=>({key,Name:row?.Name,Conf:row?.Conf,SkinConf:row?.SkinConf,fields:Object.keys(row||{}).slice(0,18)})),
+   confSamples:confEntries.slice(0,5).map(([key,row])=>({key,Name:row?.Name,Character:row?.Character,fields:Object.keys(row||{}).slice(0,18)})),
+   confLookupSamples:skinEntries.slice(0,12).map(([key,row])=>({skin:key,conf:row?.Conf,found:confByKey.has(norm(row?.Conf||row?.SkinConf||""))}))
   });
  }catch(e){
   console.error("Skin data error:",e);skins=[];renderSkinAudit();
