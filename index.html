@@ -430,29 +430,35 @@ async function loadSkins(){
    [b.name,b.hash,b.path,b.fankit,b.id].filter(v=>v!==null&&v!==undefined&&v!=="").forEach(v=>brawlerByAlias.set(norm(v),b));
   });
   const charEntries=Object.entries(charData||{});
-  const charByKey=new Map(charEntries.map(([key,row])=>[norm(key),{key,row}]));
-  const confByKey=new Map(Object.entries(confData||{}).map(([key,row])=>[norm(key),{key,row}]));
   const texts=textData||{};
+  // SkinConf.Character は characters の行キーとは限らないため、
+  // Name / ItemName / 翻訳名も含めた逆引き辞書を作る。
+  const charByAlias=new Map();
+  charEntries.forEach(([key,row])=>{
+   const translated=texts[row?.TID]?.EN||texts[row?.TID]?.en||"";
+   [key,row?.Name,row?.ItemName,translated].filter(Boolean).forEach(alias=>{
+    const k=norm(alias);
+    if(k&&!charByAlias.has(k))charByAlias.set(k,{key,row,translated});
+   });
+  });
+  const confByKey=new Map(Object.entries(confData||{}).map(([key,row])=>[norm(key),{key,row}]));
   const ownerForConf=(conf,confKey="")=>{
    const characterKey=String(conf?.Character||"");
-   const charEntry=charByKey.get(norm(characterKey));
+   const charEntry=charByAlias.get(norm(characterKey));
    const row=charEntry?.row;
-   const translated=row?(texts[row.TID]?.EN||texts[row.TID]?.en||""):"";
+   const translated=charEntry?.translated||(row?(texts[row.TID]?.EN||texts[row.TID]?.en||""):"");
    const candidates=[
     characterKey,
     charEntry?.key,
+    row?.Name,
     row?.ItemName,
     translated,
-    row?.Name,
     conf?.Name,
-    confKey,
-    String(confKey||"").split(/[_-]/)[0]
+    confKey
    ].filter(Boolean);
    for(const candidate of candidates){
     const direct=brawlerByAlias.get(norm(candidate));
     if(direct)return {brawler:direct,characterKey:characterKey||candidate};
-    const prefix=norm(candidate).replace(/(skin|conf|default|base)$/i,"");
-    if(prefix&&brawlerByAlias.has(prefix))return {brawler:brawlerByAlias.get(prefix),characterKey:characterKey||candidate};
    }
    return null;
   };
@@ -477,7 +483,7 @@ async function loadSkins(){
   renderSkins();
   renderSkinAudit();
   if(selected)showBrawler(selected);
-  console.info("Skin mapping diagnostic:",{total:allRows.length,matched:matchedCount,unmatched:unmatchedCount,missingId:missingIdCount,displayed:skins.length,rico:skins.filter(x=>x.brawler==="Rico").map(x=>({name:x.name,id:x.id}))});
+  console.info("Skin mapping diagnostic:",{total:allRows.length,matched:matchedCount,unmatched:unmatchedCount,missingId:missingIdCount,displayed:skins.length,zeroSkinBrawlers:brawlers.filter(b=>!skins.some(s=>s.brawler===b.name)).map(b=>b.name),sampleUnmatched:unmatchedNames.slice(0,30),skinConfRows:Object.keys(confData||{}).length,characterRows:charEntries.length});
  }catch(e){
   console.error("Skin data error:",e);
   skins=[];
